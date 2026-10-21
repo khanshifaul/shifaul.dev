@@ -42,3 +42,39 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Zolly office runtime — machine-local state, NOT memory.
+# .agents/memory/ IS committed on purpose: it is the knowledge that has to
+# survive a machine switch. Everything below is high-churn runtime that is
+# worthless on another box. Do NOT add `.agents/` wholesale.
+# .agents/results/ is deliberately NOT ignored: a worker commits its result
+# file on the task branch, and the reviewer reads it there. It is not
+# committed to main, but git has no per-branch ignore.
+.agents/STATE.md
+.agents/day.json
+.agents/queue/
+.agents/runs/
+.agents/inbox/
+.agents/worktrees/
+.agents/trash/
+.agents/days/
+.agents/events/
+.agents/monitor/
+.agents/memory/.work/
+.agents/memory/.lock
+.agents/memory/*.tmp
+.agents-backup-*/
+.agents/foreman.pid
+.agents/foreman-loop.pid
+.agents/foreman-settle.pid
+.agents/LAST_PROMPT.md
+.agents/foreman-nudged.stamp
+.agents/zolly/telegram_offset.txt
+.agents/zolly/telegram_serve.lock
+.agents/zolly/task_ledger.json
+.agents/zolly/task_ledger.json.tmp
+.agents/zolly/dead_letter.jsonl
+.agents/nudge.stamp
+
+# Zolly: omp project MCP registration (absolute zolly-mcp path, per office).
+.omp/mcp.json

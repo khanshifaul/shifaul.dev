@@ -50,7 +50,7 @@ bun run dev:api         # API only (:4000, watch mode)
 bun run dev:web         # web only (:3000)
 ```
 
-Open http://localhost:3000. API health is http://localhost:4000/health.
+Open http://localhost:3000. API health is http://localhost:4000/api/health.
 
 ## Build and test
 
@@ -62,6 +62,9 @@ bun run test            # API Jest suite
 bun run test:e2e        # API e2e (needs a running API/DB)
 bun run lint
 ```
+
+The API Jest suite currently fails to resolve `prisma/generated/client`; this predates the
+monorepo move (see [the migration plan](docs/plans/2026-10-24-monorepo-migration.md), §5.1).
 
 ## Deploy
 

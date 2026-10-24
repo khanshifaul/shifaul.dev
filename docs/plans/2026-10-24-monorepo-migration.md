@@ -270,7 +270,7 @@ bun run dev
 
 # terminal 2
 curl -fsS http://localhost:4000/api/health
-curl -fsS http://localhost:4000/api/projects | head
+curl -fsS http://localhost:4000/api/projects/public/projects | head
 curl -fsS http://localhost:3000/ | head
 ```
 
@@ -326,7 +326,7 @@ In **Render → backend-shifaul → Settings**:
 Keep every env var as-is. Deploy, then:
 ```bash
 curl -fsS https://backend.shifaul.dev/api/health
-curl -fsS https://backend.shifaul.dev/api/projects | head
+curl -fsS https://backend.shifaul.dev/api/projects/public/projects | head
 # Swagger: https://backend.shifaul.dev/api/docs
 ```
 Rollback if needed: point Repository back to `backend.shifaul.dev` and restore the old
@@ -378,7 +378,7 @@ API calls with the existing `CORS_ORIGIN` are the current behavior and stay unch
 | Prisma | `bun run db:generate`; `apps/api/prisma/generated/client.ts` regenerated |
 | Local dev | `bun run dev`; API `/api/health`, web `/` |
 | Auth | Browser sign-in → `/admin` loads and an authenticated request returns data |
-| Render | `/api/health`, `/api/projects`, `/api/docs` on `backend.shifaul.dev` |
+| Render | `/api/health`, `/api/projects/public/projects`, `/api/docs` on `backend.shifaul.dev` |
 | Vercel | Home, `/blog`, `/portfolio`, `/sign-in`, `/admin`, `/sitemap.xml`, `/robots.txt` |
 | Secrets | only `.env.example` tracked |
 | Paths | `git grep -n "backend.shifaul.dev"` → only intentional runtime fallbacks |

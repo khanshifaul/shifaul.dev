@@ -37,7 +37,7 @@ Verify:
 
 ```bash
 curl -fsS https://backend.shifaul.dev/api/health
-curl -fsS https://backend.shifaul.dev/api/projects | head
+curl -fsS https://backend.shifaul.dev/api/projects/public/projects | head
 # Swagger: https://backend.shifaul.dev/api/docs
 ```
 

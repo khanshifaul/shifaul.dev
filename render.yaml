@@ -8,7 +8,7 @@ services:
       bun run --filter '@shifaul/api' db:generate &&
       bun run --filter '@shifaul/api' build
     startCommand: bun run --filter '@shifaul/api' start:prod
-    healthCheckPath: /health
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production

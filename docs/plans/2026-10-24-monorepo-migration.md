@@ -151,7 +151,7 @@ services:
       bun run --filter '@shifaul/api' db:generate &&
       bun run --filter '@shifaul/api' build
     startCommand: bun run --filter '@shifaul/api' start:prod
-    healthCheckPath: /health
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -269,7 +269,7 @@ Smoke test the runtime, not just the build:
 bun run dev
 
 # terminal 2
-curl -fsS http://localhost:4000/health
+curl -fsS http://localhost:4000/api/health
 curl -fsS http://localhost:4000/api/projects | head
 curl -fsS http://localhost:3000/ | head
 ```
@@ -321,11 +321,11 @@ In **Render → backend-shifaul → Settings**:
 | Root Directory | *(blank = repo root)* |
 | Build Command | `bun install && bun run --filter '@shifaul/api' db:generate && bun run --filter '@shifaul/api' build` |
 | Start Command | `bun run --filter '@shifaul/api' start:prod` |
-| Health Check Path | `/health` |
+| Health Check Path | `/api/health` |
 
 Keep every env var as-is. Deploy, then:
 ```bash
-curl -fsS https://backend.shifaul.dev/health
+curl -fsS https://backend.shifaul.dev/api/health
 curl -fsS https://backend.shifaul.dev/api/projects | head
 # Swagger: https://backend.shifaul.dev/api/docs
 ```
@@ -376,9 +376,9 @@ API calls with the existing `CORS_ORIGIN` are the current behavior and stay unch
 | Web build | `bun run build:web` |
 | API tests | `bun run test` — **known red before migration** (`prisma/generated/client` Jest resolution); verify it is no worse |
 | Prisma | `bun run db:generate`; `apps/api/prisma/generated/client.ts` regenerated |
-| Local dev | `bun run dev`; API `/health`, web `/` |
+| Local dev | `bun run dev`; API `/api/health`, web `/` |
 | Auth | Browser sign-in → `/admin` loads and an authenticated request returns data |
-| Render | `/health`, `/api/projects`, `/api/docs` on `backend.shifaul.dev` |
+| Render | `/api/health`, `/api/projects`, `/api/docs` on `backend.shifaul.dev` |
 | Vercel | Home, `/blog`, `/portfolio`, `/sign-in`, `/admin`, `/sitemap.xml`, `/robots.txt` |
 | Secrets | only `.env.example` tracked |
 | Paths | `git grep -n "backend.shifaul.dev"` → only intentional runtime fallbacks |

@@ -21,7 +21,7 @@ two-repo layout. Only build/start commands and paths differ.
 | Root Directory | *(blank — repo root)* |
 | Build Command | `bun install && bun run --filter '@shifaul/api' db:generate && bun run --filter '@shifaul/api' build` |
 | Start Command | `bun run --filter '@shifaul/api' start:prod` |
-| Health Check Path | `/health` |
+| Health Check Path | `/api/health` |
 
 `render.yaml` encodes the same commands. Keep every env var already configured in the
 dashboard (`DATABASE_URL`, `JWT_SECRET`, OAuth, R2, Telegram, AI keys, …).
@@ -36,7 +36,7 @@ bun run --filter '@shifaul/api' db:migrate
 Verify:
 
 ```bash
-curl -fsS https://backend.shifaul.dev/health
+curl -fsS https://backend.shifaul.dev/api/health
 curl -fsS https://backend.shifaul.dev/api/projects | head
 # Swagger: https://backend.shifaul.dev/api/docs
 ```
@@ -66,7 +66,7 @@ Rollback: reconnect the old repo, or promote the previous production deployment.
 
 ## Cutover order
 
-1. Deploy the API from the monorepo; verify `/health` and a public endpoint.
+1. Deploy the API from the monorepo; verify `/api/health` and a public endpoint.
 2. Deploy the web app; verify sign-in, `/admin`, `/blog`, `/portfolio`, sitemap/robots.
 3. No DNS changes are needed.
 

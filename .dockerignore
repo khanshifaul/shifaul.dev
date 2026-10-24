@@ -1,0 +1,15 @@
+# Build context for a future apps/api Dockerfile (repo root).
+.git
+.github
+**/node_modules
+**/dist
+**/.next
+**/coverage
+**/.turbo
+**/*.log
+**/.env
+**/.env.*
+!**/.env.example
+apps/web
+.agents
+docs

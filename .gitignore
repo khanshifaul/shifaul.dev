@@ -1,0 +1,61 @@
+# dependencies / build
+node_modules/
+dist/
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+
+# env (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# generated / runtime
+uploads/
+logs/
+*.log
+.vercel/
+.turbo/
+graphify-out/
+.neon
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# agent / editor tooling (local only)
+.claude/
+.omp/mcp.json
+skills-lock.json
+
+# agent office runtime — machine-local state, NOT memory.
+# .agents/memory/ stays tracked on purpose.
+.agents/STATE.md
+.agents/day.json
+.agents/queue/
+.agents/runs/
+.agents/inbox/
+.agents/worktrees/
+.agents/trash/
+.agents/days/
+.agents/events/
+.agents/monitor/
+.agents/memory/.work/
+.agents/memory/.lock
+.agents/memory/*.tmp
+.agents-backup-*/
+.agents/foreman.pid
+.agents/foreman-loop.pid
+.agents/foreman-settle.pid
+.agents/LAST_PROMPT.md
+.agents/foreman-nudged.stamp
+.agents/zolly/telegram_offset.txt
+.agents/zolly/telegram_serve.lock
+.agents/zolly/task_ledger.json
+.agents/zolly/task_ledger.json.tmp
+.agents/zolly/dead_letter.jsonl
+.agents/nudge.stamp

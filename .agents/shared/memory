@@ -1,0 +1,993 @@
+#!/usr/bin/env bash
+# memory — durable, bounded, git-committed memory for the agent.
+#
+#   memory add <decision|learning|current> <text>... [--supersedes <id>]
+#   memory confirm <id>
+#   memory retract <id> [--promoted-to <file>]
+#   memory read  [<decision|learning|current|archive|all>]
+#   memory search <terms>
+#   memory log <id>
+#   memory archive
+#   memory compact [<id>...]
+#   memory check               # counts, 90% trim, bound + secret scan
+#
+# Trust: `confirm` is a workflow convention, not a cryptographic gate. A
+# process running as the same OS user can edit the store directly.
+#
+# Design: specs/agents/session-memory.spec.md
+#
+# Notes:
+#   - Four memory kinds, four homes. This tool owns three of them; the fourth
+#     (open questions for the founder) is OPEN-QUESTIONS.md and is LINKED, never
+#     copied. See spec §1.
+#   - Every write is a whole-file atomic rewrite: tmp -> sync -> mv. mv within
+#     one filesystem is atomic, so a power cut leaves the OLD file or the NEW
+#     one, never a torn one. Same precedent as set_field() in \.agents/foreman/foreman.
+#   - Whole-file rewrite (not append-only JSONL) is safe here ONLY because the
+#     live files are bounded (spec §5). A bounded file is cheap to rewrite, so
+#     the only failure mode left is a partial write, and mv rules that out.
+#   - bash + coreutils + awk on purpose. This runs in the crash-recovery path,
+#     where a JS runtime may be the thing that broke.
+#
+# Exit codes: 0 ok | 1 usage | 2 secret blocked | 3 bound exceeded
+
+set -uo pipefail
+
+SELF="${BASH_SOURCE[0]}"
+while [ -L "$SELF" ]; do
+  LINK="$(readlink "$SELF")"
+  case "$LINK" in /*) SELF="$LINK" ;; *) SELF="$(dirname "$SELF")/$LINK" ;; esac
+done
+HERE="$(cd "$(dirname "$SELF")" && pwd)"
+REPO="$(cd "$HERE/../.." && pwd)"
+
+# Parse --agent flag FIRST so MEMORY_DIR can use it.
+case "${1:-}" in
+  --agent)
+    shift
+    if [ $# -eq 0 ]; then
+      echo "memory: --agent needs a name" >&2
+      exit 1
+    fi
+    MEMORY_AGENT="$1"
+    shift
+    case "$MEMORY_AGENT" in
+      ""|.|..|*/*|*\\*)
+        echo "memory: --agent must be one path component, got '$MEMORY_AGENT'" >&2
+        exit 1
+        ;;
+    esac
+    ;;
+esac
+
+# MEMORY_DIR exists so memory-test can sandbox into a temp dir instead of
+# writing real memory. Unset in normal use.
+if [ -n "${MEMORY_AGENT:-}" ]; then
+  MEMORY_DIR="${MEMORY_DIR:-$REPO/.agents/$MEMORY_AGENT/memory}"
+else
+  MEMORY_DIR="${MEMORY_DIR:-$REPO/.agents/memory}"
+fi
+DECISIONS="$MEMORY_DIR/decisions.md"
+LEARNINGS="$MEMORY_DIR/learnings.md"
+CURRENT="$MEMORY_DIR/current.md"
+ARCHIVE="$MEMORY_DIR/archive"
+LOCK="$MEMORY_DIR/.lock"
+WORK="$MEMORY_DIR/.work"
+# Live windows. The bound is the whole point: memory that grows unboundedly is
+# HANDOFF.md all over again. spec §5
+BOUND_DECISION=20
+BOUND_LEARNING=30
+BOUND_CURRENT=5
+BUDGET_BYTES=24576
+
+die()  { local c="${2:-1}"; echo "memory: $*" >&2; exit "$c"; }
+info() { echo "memory: $*"; }
+
+# ── atomic write ──────────────────────────────────────────────────────────────
+# tmp -> sync -> mv. Fail-closed: if sync fails the mv never runs, so the live
+# file is still the old one. spec §3
+#
+# MEMORY_CRASH_AT is a TEST-ONLY fault-injection point used by memory-test to
+# prove power-cut behaviour deterministically. Never set in normal use.
+atomic_write() {
+  local src="$1" dst="$2"
+  case "${MEMORY_CRASH_AT:-}" in pre-sync) kill -9 $$ ;; esac
+  sync "$src" 2>/dev/null || return 1
+  case "${MEMORY_CRASH_AT:-}" in post-sync) kill -9 $$ ;; esac
+  mv -f "$src" "$dst" || return 1
+  case "${MEMORY_CRASH_AT:-}" in post-mv) kill -9 $$ ;; esac
+  return 0
+}
+
+# ── secret scan ───────────────────────────────────────────────────────────────
+# spec §9. A write is REFUSED, not warned about: memory is committed to git, so
+# a secret here lives in the permanent history forever.
+#
+# Patterns are high-confidence and shape-specific on purpose. A generic
+# "secret: <value>" heuristic is deliberately NOT used — it would block the
+# correct behaviour this rule wants to encourage, namely a memory that says
+# "the value lives in infrastructure/k8s/base/secrets.yaml".
+SECRET_BLOCK='(postgres(ql)?|mysql|mongodb(\+srv)?|redis|amqp|ftp|ssh)://[^[:space:]]*:[^[:space:]@/]+@|sk-[A-Za-z0-9]{16,}|sk_live_[A-Za-z0-9]{16,}|(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY|eyJ[A-Za-z0-9_=-]{10,}\.eyJ'
+# Flagged, not blocked: usually a token, sometimes a legitimate content hash.
+# Too ambiguous to refuse a write over.
+SECRET_FLAG='(^|[^A-Za-z0-9])[0-9a-f]{64}([^A-Za-z0-9]|$)'
+
+# scan_secrets <text>; returns 2 and prints a reason on a blocking match.
+scan_secrets() {
+  local text="$1" f
+  mkdir -p "$WORK" 2>/dev/null
+  # A fixed `$WORK/scan` was shared by every process in the office; two
+  # concurrent writers could overwrite it between printf and grep, letting an
+  # unscanned secret through. Each scan gets its own file.
+  f=$(mktemp "$WORK/scan.XXXXXX" 2>/dev/null) || {
+    echo "memory: cannot create a secret-scan temp file — refusing the write." >&2
+    return 2
+  }
+  printf '%s' "$text" >"$f" 2>/dev/null || {
+    rm -f "$f"
+    echo "memory: cannot write a secret-scan temp file — refusing the write." >&2
+    return 2
+  }
+  if grep -Eq "$SECRET_BLOCK" "$f" 2>/dev/null; then
+    rm -f "$f"
+    {
+      echo "memory: REFUSING WRITE — text matches a credential pattern."
+      echo "        A memory entry records WHERE a secret lives, never its value."
+      echo "        e.g. 'the value lives in infrastructure/k8s/base/secrets.yaml'."
+    } >&2
+    return 2
+  fi
+  if grep -Eq "$SECRET_FLAG" "$f" 2>/dev/null; then
+    echo "memory: WARNING — text contains a 64-char hex string; check it is not a token." >&2
+  fi
+  rm -f "$f"
+  return 0
+}
+
+# ── file helpers ──────────────────────────────────────────────────────────────
+file_for_kind() {
+  case "$1" in
+    decision) echo "$DECISIONS" ;;
+    learning) echo "$LEARNINGS" ;;
+    current)  echo "$CURRENT" ;;
+    *) return 1 ;;
+  esac
+}
+
+prefix_for_kind() {
+  case "$1" in
+    decision) echo D ;;
+    learning) echo L ;;
+    current)  echo C ;;
+    *) return 1 ;;
+  esac
+}
+
+bound_for_kind() {
+  case "$1" in
+    decision) echo "$BOUND_DECISION" ;;
+    learning) echo "$BOUND_LEARNING" ;;
+    current)  echo "$BOUND_CURRENT" ;;
+  esac
+}
+
+base_for_kind() {
+  case "$1" in
+    decision) echo "decisions" ;;
+    learning) echo "learnings" ;;
+    current)  echo "current" ;;
+  esac
+}
+
+# Next free number for an id prefix.
+#
+# Scans the live file AND the archive, because an id is a permanent citation: an
+# entry can say "Supersedes: L-0031", and a later entry may live in an archive
+# file. Allocating from the live file alone reuses ids once entries roll out,
+# which breaks those citations AND (because the archive write skips ids it
+# already holds) silently discards the colliding new entry. That bug shipped for
+# one commit and lost 4 of 5 entries in a 5-overflow burst.
+#
+# The 10# prefix is also load-bearing: without it bash reads a zero-padded value
+# as OCTAL, so "0008" is a syntax error and "0009" silently becomes 1.
+next_n() {
+  local prefix="$1" f="$2" base="$3" n
+  n=$(grep -hoE "^## ${prefix}-[0-9]{4}" "$f" "$ARCHIVE/$base"-*.md 2>/dev/null \
+        | sed "s/^## ${prefix}-//" | sort -n | tail -1)
+  [[ "$n" =~ ^[0-9]+$ ]] || n=0
+  echo $((10#$n + 1))
+}
+
+count_entries() { grep -cE '^## [DLC]-[0-9]{4} \|' "$1" 2>/dev/null || true; }
+
+# The byte budget is over the live files together, not per file.
+live_bytes() {
+  local total=0 f b
+  for f in "$DECISIONS" "$LEARNINGS" "$CURRENT"; do
+    [ -f "$f" ] || continue
+    b=$(wc -c <"$f" 2>/dev/null | tr -d ' ')
+    total=$((total + ${b:-0}))
+  done
+  printf '%s\n' "$total"
+}
+
+live_entries() {
+  local total=0 f n
+  for f in "$DECISIONS" "$LEARNINGS" "$CURRENT"; do
+    [ -f "$f" ] || continue
+    n=$(count_entries "$f"); total=$((total + ${n:-0}))
+  done
+  printf '%s\n' "$total"
+}
+
+# Create a live file with its preamble on first use.
+ensure_file() {
+  local f="$1" kind="$2" bound="$3" base desc
+  [ -f "$f" ] && return 0
+  case "$kind" in
+    decision) base="decisions"; desc="Settled decisions" ;;
+    learning) base="learnings"; desc="Learned knowledge" ;;
+    current)  base="current";    desc="Current state" ;;
+  esac
+  mkdir -p "$MEMORY_DIR" "$ARCHIVE"
+  cat >"$f" <<EOF
+# $desc
+
+Every entry below is **believed** until a human runs \`memory confirm <id>\`.
+A believed entry is a claim an agent made, not a verified fact.
+
+Do not relitigate a settled entry unless a LATER entry supersedes it.
+Nothing is ever deleted — a correction supersedes, so the next agent can see
+the question was already answered.
+
+Live window: newest $bound entries. Older entries roll to
+\`archive/$base-<YYYY-MM>.md\` on the next write.
+
+## Content
+
+Open questions for the founder are NOT stored here. They live in
+\`OPEN-QUESTIONS.md\` and are deleted when answered. spec §1.3
+EOF
+}
+
+# ── locking ───────────────────────────────────────────────────────────────────
+# Serialise writers inside one worktree so a concurrent add cannot lose an
+# update. Each git worktree has its own checkout, so cross-worktree writes never
+# touch the same bytes. spec §3.1
+acquire_lock() {
+  mkdir -p "$MEMORY_DIR" "$WORK" 2>/dev/null
+  if command -v flock >/dev/null 2>&1; then
+    # No `2>/dev/null` on this exec: redirections on `exec` persist for the
+    # whole shell, so silencing stderr here silences every later error message.
+    exec 9>"$LOCK" || return 0
+    flock -w 10 9 2>/dev/null || { echo "memory: lock timeout on $LOCK" >&2; return 1; }
+  else
+    echo "memory: WARNING — flock unavailable; this write is unlocked." >&2
+  fi
+  return 0
+}
+
+# ── add ───────────────────────────────────────────────────────────────────────
+# The id of the entry whose body already contains this exact text, if any.
+# A second identical correction is recurrence, not a new fact.
+entry_id_for_text() {
+  awk -v t="$1" '
+    /^## [DLC]-[0-9][0-9][0-9][0-9] \|/ { id=$2 }
+    index($0, t) { if (id != "") { print id; exit } }
+  ' "$2"
+}
+
+cmd_add() {
+  local kind="${1:-}"
+  case "$kind" in
+    decision|learning|current) shift ;;
+    *) die "usage: memory add <decision|learning|current> <text>... [--supersedes <id>]" ;;
+  esac
+
+  local supersedes="" text="" a
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --supersedes) shift; [ $# -gt 0 ] || die "--supersedes needs an id"; supersedes="$1" ;;
+      -*) die "unknown flag: $1" ;;
+      *) if [ -z "$text" ]; then text="$1"; else text="$text $1"; fi ;;
+    esac
+    shift
+  done
+
+  [ -n "${text// }" ] || die "empty text — nothing to remember"
+
+  # A body line starting with '## ' would corrupt the parse of every later entry.
+  if grep -qE '^## ' <<<"$text"; then
+    die "body may not contain a line starting with '## ' (it would break the parse)"
+  fi
+
+  local scanrc=0
+  scan_secrets "$text" || scanrc=$?
+  [ "$scanrc" -eq 2 ] && exit 2
+
+  acquire_lock || exit 1
+
+  local f bound prefix base id date session new
+  f="$(file_for_kind "$kind")"
+  bound="$(bound_for_kind "$kind")"
+  prefix="$(prefix_for_kind "$kind")"
+  base="$(base_for_kind "$kind")"
+  ensure_file "$f" "$kind" "$bound"
+
+  duplicate="$(entry_id_for_text "$text" "$f")"
+  if [ -n "$duplicate" ]; then
+    printf 'memory: already recorded as %s — this is recurrence, not a new fact.\n' "$duplicate" >&2
+    printf '        Promote it to a rule instead: memory retract %s --promoted-to .agents/rules/<file>.md\n' "$duplicate" >&2
+    exit 0
+  fi
+
+  id="$(printf '%s-%04d' "$prefix" "$(next_n "$prefix" "$f" "$base")")"
+  date="$(date -u +%Y-%m-%d)"
+  # Attribution breadcrumb, not an audit log. spec §10.6
+  session="${MEMORY_SESSION:-$(git -C "$REPO" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)}"
+
+  mkdir -p "$WORK"
+  printf '%s\n' "$text" >"$WORK/body"
+  new="$WORK/new"
+
+  # Pass the body as a FILE, never as a -v argument or an env var: arbitrary
+  # text (backslashes, newlines, quotes) cannot be mangled that way.
+  awk -v id="$id" -v date="$date" -v session="$session" -v sup="$supersedes" -v bodyf="$WORK/body" '
+    BEGIN {
+      nb = 0
+      while ((getline line < bodyf) > 0) bb[nb++] = line
+      close(bodyf)
+    }
+    { print }
+    END {
+      print ""
+      printf "## %s | %s | believed | %s\n\n", id, date, session
+      for (i = 0; i < nb; i++) print bb[i]
+      if (sup != "") printf "Supersedes: %s\n", sup
+    }
+  ' "$f" >"$new" 2>/dev/null
+
+  local live old_size new_size projected
+  live=$(live_bytes)
+  old_size=$(wc -c <"$f" 2>/dev/null | tr -d ' ')
+  new_size=$(wc -c <"$new" 2>/dev/null | tr -d ' ')
+  projected=$((live - ${old_size:-0} + ${new_size:-0}))
+  if [ "$projected" -gt "$BUDGET_BYTES" ]; then
+    rm -f "$new"
+    die "REFUSING WRITE — live files would total ${projected}B, budget is ${BUDGET_BYTES}B. Run 'memory compact' to reclaim the bodies of already-retracted entries, or shorten the entry." 3
+  fi
+
+  atomic_write "$new" "$f" || die "atomic write failed — live file is unchanged"
+  info "wrote $id to $(basename "$f")"
+  enforce_bound "$kind"
+  exit 0
+}
+
+# Keep only the newest N entries. The rest roll into
+# archive/<base>-<YYYY-MM>.md, one entry at a time, so the roll is idempotent
+# and can be interrupted at any point. spec §5
+#
+# Order matters: archives are written BEFORE the live file is trimmed. A crash
+# in between leaves an entry in both places — a duplicate, which is harmless and
+# visible — rather than an entry in neither, which is silent loss.
+enforce_bound() {
+  local kind="$1" f bound base n keep
+  f="$(file_for_kind "$kind")"
+  bound="$(bound_for_kind "$kind")"
+  if [ -n "${ENFORCE_KEEP:-}" ]; then
+    bound="$ENFORCE_KEEP"
+  fi
+  base="$(base_for_kind "$kind")"
+  n=$(count_entries "$f"); n="${n:-0}"
+  [ "$n" -gt "$bound" ] || return 0
+
+  local dropdir="$WORK/drop"
+  rm -rf "$dropdir"; mkdir -p "$WORK" "$dropdir"
+  keep="$WORK/keep"
+
+  # Split the file: preamble + the NEWEST `bound` entries -> keep; the OLDER
+  # ones -> one file per entry, named by id.
+  #
+  # The total is counted first so the split can tell "oldest" from "newest"
+  # without buffering the whole file. Getting this backwards is silent: it
+  # archives the entries you just wrote and keeps the ones you already retired.
+  local total
+  total=$(grep -cE '^## [DLC]-[0-9]{4} \|' "$f" 2>/dev/null || true)
+  total="${total:-0}"
+  local keep_from=$((total - bound + 1))
+  [ "$keep_from" -lt 1 ] && keep_from=1
+
+  awk -v keepfrom="$keep_from" -v dropdir="$dropdir" '
+    function flush(  i, f) {
+      if (!have) return
+      if (isdrop) {
+        f = dropdir "/" curid ".blk"
+        printf "%s", blk > f
+        close(f)
+      } else {
+        for (i = 1; i <= nbuf; i++) print buf[i]
+      }
+      nbuf = 0; blk = ""; have = 0
+    }
+    /^## [DLC]-[0-9]{4} \|/ {
+      flush()
+      idx++
+      split($0, p, "|")
+      curid = p[1]; sub(/^##[ \t]+/, "", curid); gsub(/[ \t]/, "", curid)
+      isdrop = (idx < keepfrom)
+      have = 1; nbuf = 1; buf[1] = $0
+      blk = $0 ORS
+      next
+    }
+    {
+      if (have) { nbuf++; buf[nbuf] = $0; blk = blk $0 ORS }
+      else print
+    }
+    END { flush() }
+  ' "$f" >"$keep" 2>/dev/null
+
+  local blk id month target
+  shopt -s nullglob
+  for blk in "$dropdir"/*.blk; do
+    id=$(basename "$blk" .blk)
+    month=$(sed -n '1s/^## [DLC]-[0-9]\{4\} | \([0-9]\{4\}-[0-9]\{2\}\).*/\1/p' "$blk")
+    [ -n "$month" ] || month="unknown"
+    target="$ARCHIVE/$base-$month.md"
+
+    # Idempotence: never append an entry that is already in the archive.
+    if [ -f "$target" ] && grep -qE "^## ${id} \|" "$target"; then continue; fi
+
+    mkdir -p "$ARCHIVE"
+    {
+      if [ -f "$target" ]; then
+        # The existing archive MUST be carried over. Writing only the new block
+        # replaces the file, and because the idempotence check above only looks
+        # at the CURRENT content, it silently destroys every earlier entry one
+        # roll at a time. (It did. The burst test caught it.)
+        cat "$target"
+        printf '\n'
+      else
+        printf '# Archived %s — %s\n\nRolled out of `../../%s.md` by the live-window bound\n(`specs/agents/session-memory.spec.md` §5). Committed history, never loaded in full.\n\n' \
+          "$base" "$month" "$base"
+      fi
+      cat "$blk"
+    } >"$WORK/arch"
+    atomic_write "$WORK/arch" "$target" || { echo "memory: archive write failed for $id" >&2; return 1; }
+  done
+  shopt -u nullglob
+
+  atomic_write "$keep" "$f" || { echo "memory: trim write failed — live file unchanged" >&2; return 1; }
+  rm -rf "$dropdir"
+  info "archived $((n - bound)) $base entr$( [ $((n - bound)) -eq 1 ] && echo y || echo ies) past the bound of $bound"
+  return 0
+}
+
+# ── confirm ───────────────────────────────────────────────────────────────────
+cmd_confirm() {
+  local id="${1:-}"
+  [ -n "$id" ] || die "usage: memory confirm <id>"
+  acquire_lock || exit 1
+  local f new="" rc=0
+  for f in "$DECISIONS" "$LEARNINGS" "$CURRENT"; do
+    [ -f "$f" ] || continue
+    grep -qE "^## ${id} \|" "$f" || continue
+    mkdir -p "$WORK"
+    new="$WORK/confirm"
+    awk -v id="$id" '
+      /^## [DLC]-[0-9]{4} \|/ {
+        n = split($0, p, "|")
+        if (p[1] ~ ("^## " id "[ \t]*$")) {
+          # Trim each field exactly once, or repeated confirms would accumulate
+          # whitespace. Strip the leading hash-marks from p[1] and re-add them
+          # once, otherwise the rebuild doubles them (## ## D-0001).
+          for (i = 1; i <= n; i++) { gsub(/^[ \t]+|[ \t]+$/, "", p[i]) }
+          sub(/^##[ \t]+/, "", p[1])
+          p[3] = "confirmed"
+          $0 = "## " p[1] " | " p[2] " | " p[3] " | " p[4]
+        }
+      }
+      { print }
+    ' "$f" >"$new" 2>/dev/null
+    if atomic_write "$new" "$f"; then
+      info "$id is now confirmed (founder-verified) in $(basename "$f")"
+    else
+      rc=1
+    fi
+    break
+  done
+  [ -n "$new" ] || die "no entry $id (ids look like D-0001, L-0001, C-0001)"
+  exit $rc
+}
+
+# ── retract ───────────────────────────────────────────────────────────────────
+# A promoted learning leaves the live store because it is now a rule. The
+# entry is NOT deleted — deletion loses the history the store exists for. Its
+# status becomes `retracted` and it names the file it was promoted into.
+#
+# IDEMPOTENT: an entry carries AT MOST ONE `Promoted to:` line, and
+# re-retracting must not add a second one. A command that creates the surplus
+# `compact` exists to reclaim is the bug, not the remedy: the over-budget error
+# tells an agent to retract, so a retract that grows the store walks it straight
+# into the failure it is trying to fix. The file is rewritten only when the
+# bytes actually change, so repeating the same retraction is a byte-for-byte
+# no-op and the message says "already retracted", never a fresh retraction.
+#
+# POLICY on a changed target: the NEW target wins. The recorded line is
+# replaced and the message names both the discarded and the kept target.
+# Keeping the first would strand a wrong target with no supported way to
+# correct it — the store is committed, so a replaced target survives in git
+# history if it mattered. This matches `compact`, which keeps the FIRST
+# `Promoted to:` line because that is the newest: retract only ever writes one,
+# immediately after the header.
+cmd_retract() {
+  local id="" target="" f new="" rc=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --promoted-to) shift; [ $# -gt 0 ] || die "--promoted-to needs a path"; target="$1" ;;
+      -*) die "unknown flag: $1" ;;
+      *) [ -z "$id" ] && id="$1" || die "retract takes one id" ;;
+    esac
+    shift
+  done
+  [ -n "$id" ] || die "usage: memory retract <id> [--promoted-to <file>]"
+  acquire_lock || exit 1
+  local diag="$WORK/retract.diag"
+  mkdir -p "$WORK"
+  : >"$diag"
+
+  for f in "$DECISIONS" "$LEARNINGS" "$CURRENT"; do
+    [ -f "$f" ] || continue
+    grep -qE "^## ${id} \|" "$f" || continue
+    new="$WORK/retract"
+
+    # One pass over the file. Emit the target entry's header, then exactly one
+    # pointer line. With a target, the new line is emitted and every existing
+    # pointer in the entry's header region is dropped (and recorded for the
+    # message). Without a target the existing lines pass through untouched, so
+    # a no-target retract can never discard a recorded home. The pointer region
+    # ends at the first non-pointer line, so body text is not mistaken for one.
+    awk -v id="$id" -v target="$target" -v diag="$diag" '
+      /^## [DLC]-[0-9]{4} \|/ {
+        inside = 0; region = 0
+        n = split($0, p, "|")
+        if (p[1] ~ ("^## " id "[ \t]*$")) {
+          for (i = 1; i <= n; i++) { gsub(/^[ \t]+|[ \t]+$/, "", p[i]) }
+          sub(/^##[ \t]+/, "", p[1])
+          printf "R\t%s\n", (p[3] == "retracted" ? "1" : "0") >> diag
+          p[3] = "retracted"
+          $0 = "## " p[1] " | " p[2] " | " p[3] " | " p[4]
+          print
+          if (target != "") print "Promoted to: " target
+          inside = 1; region = 1
+          next
+        }
+        print
+        next
+      }
+      inside && region && /^Promoted to: / {
+        printf "P\t%s\n", substr($0, 14) >> diag
+        if (target != "") next
+      }
+      inside && region && $0 !~ /^Promoted to: / { region = 0 }
+      { print }
+    ' "$f" >"$new" 2>/dev/null
+
+    local was="" n_promo=0 first_promo="" all_promo="" others="" tag val
+    while IFS=$'\t' read -r tag val; do
+      case "$tag" in
+        R) was="$val" ;;
+        P) n_promo=$((n_promo + 1))
+           [ -n "$first_promo" ] || first_promo="$val"
+           all_promo="${all_promo:+$all_promo, }$val" ;;
+      esac
+    done <"$diag"
+    others="${all_promo#"$first_promo"}"
+    others="${others#, }"
+
+    local wrote=-1 base
+    base="$(basename "$f")"
+    if cmp -s "$new" "$f"; then
+      rm -f "$new"
+      wrote=0
+    elif atomic_write "$new" "$f"; then
+      wrote=1
+    else
+      echo "memory: retract write failed for $base — file unchanged" >&2
+      rm -f "$new"
+      rc=1
+    fi
+    [ "$wrote" -ge 0 ] || break
+
+    local prefix
+    if [ "$was" = "1" ]; then prefix="$id already retracted in $base"
+    else prefix="$id retracted from $base"; fi
+
+    if [ "$wrote" -eq 0 ]; then
+      if [ "$was" = "1" ] && [ "$n_promo" -gt 1 ]; then
+        info "$prefix — $n_promo recorded 'Promoted to:' lines ($all_promo); unchanged — run 'memory compact' to collapse them"
+      elif [ "$was" = "1" ] && [ -n "$first_promo" ]; then
+        info "$prefix — promoted to $first_promo (unchanged)"
+      elif [ "$was" = "1" ]; then
+        info "$prefix — no promotion target recorded (unchanged)"
+      else
+        info "$prefix"
+      fi
+    elif [ -n "$target" ] && [ "$n_promo" -gt 0 ]; then
+      if [ "$n_promo" -gt 1 ] && [ "$first_promo" = "$target" ]; then
+        info "$prefix — collapsed $n_promo recorded 'Promoted to:' lines to one ($target)${others:+; discarded: $others}"
+      elif [ "$n_promo" -gt 1 ]; then
+        info "$prefix — promotion target replaced: $n_promo recorded pointers ($all_promo) -> $target"
+      else
+        info "$prefix — promotion target replaced: $first_promo -> $target"
+      fi
+    elif [ -n "$target" ]; then
+      if [ "$was" = "1" ]; then
+        info "$prefix — promotion target recorded: $target"
+      else
+        info "$prefix — promoted to $target"
+      fi
+    else
+      info "$prefix"
+    fi
+    break
+  done
+  [ -n "$new" ] || die "no entry $id (ids look like D-0001, L-0001, C-0001)"
+  exit $rc
+}
+
+# ── compact ───────────────────────────────────────────────────────────────────
+# Drop the BODY of a retracted entry, keeping its header and exactly one
+# `Promoted to:` pointer. Nothing is deleted: the id stays (it is a permanent
+# citation, so a reference to a superseded entry still resolves), and the
+# pointer still says where the knowledge went.
+#
+# A retracted entry with NO `Promoted to:` line is left untouched and reported.
+# Its knowledge has no recorded home; that needs a human, not a byte reclaim.
+#
+# Compact only ever shrinks a file. It changes no entry count, so it neither
+# triggers nor replaces the archive roll, and it is safe to run while the store
+# is already over budget — which is the state a double retraction can create.
+#
+# `retract` inserts its new `Promoted to:` line immediately after the header,
+# so the FIRST such line is the MOST RECENT retraction. If two lines name
+# different targets, keep the first (the latest intent) and report the
+# discarded one.
+cmd_compact() {
+  local ids="$*" kind f new before after reclaimed=0 changed=0 rc=0
+  local diag="$WORK/compact.diag" id
+  acquire_lock || exit 1
+  mkdir -p "$WORK"
+  : >"$diag"
+
+  # Fail closed on an unknown id: compacting half a selection would be worse
+  # than refusing, because the caller cannot see which ids were skipped.
+  if [ -n "$ids" ]; then
+    for id in $ids; do
+      grep -qE "^## ${id} \|" "$DECISIONS" "$LEARNINGS" "$CURRENT" 2>/dev/null \
+        || die "no entry $id (ids look like D-0001, L-0001, C-0001)"
+    done
+  fi
+
+  for kind in decision learning current; do
+    f="$(file_for_kind "$kind")"
+    [ -f "$f" ] || continue
+    new="$WORK/compact.$kind"
+    if ! awk -v ids="$ids" -v diag="$diag" -v file="$(basename "$f")" '
+      BEGIN { nw = split(ids, wantid, " ") }
+      function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+      function flush(   i) {
+        if (!have) return
+        if (mode == "retract") {
+          print hdr
+          print keep_promo
+          print ""
+          if (body_lines > 0) printf "C\t%s\t%s\n", file, eid >> diag
+          if (dup_lines > 0) printf "D\t%s\t%s\t%d\n", file, eid, dup_lines >> diag
+          if (dropped != "") printf "X\t%s\t%s\tkept %s; discarded %s\n", file, eid, keep_promo, dropped >> diag
+        } else {
+          for (i = 1; i <= nbuf; i++) print buf[i]
+          if (want && !has) printf "N\t%s\t%s\n", file, eid >> diag
+        }
+        nbuf = 0; have = 0; mode = ""; body_lines = 0; promo_lines = 0; dropped = ""; dup_lines = 0
+      }
+      /^## [DLC]-[0-9][0-9][0-9][0-9] \|/ {
+        flush()
+        hdr = $0
+        split($0, p, "|")
+        eid = p[1]; sub(/^##[ \t]+/, "", eid); eid = trim(eid)
+        st = trim(p[3])
+        want = (st == "retracted")
+        if (ids != "") {
+          want = 0
+          for (i = 1; i <= nw; i++) if (wantid[i] == eid) want = 1
+        }
+        have = 1; nbuf = 1; buf[1] = $0; mode = "keep"; has = 0; keep_promo = ""
+        next
+      }
+      {
+        if (!have) { print; next }
+        nbuf++; buf[nbuf] = $0
+        if ($0 ~ /^Promoted to: /) {
+          has = 1; promo_lines++
+          if (promo_lines == 1) {
+            keep_promo = $0
+            if (want) mode = "retract"
+          } else if (want) {
+            if ($0 == keep_promo) dup_lines++
+            else dropped = dropped (dropped == "" ? "" : ", ") substr($0, 14)
+          }
+        } else if (want && $0 !~ /^[ \t]*$/) {
+          body_lines++
+        }
+      }
+      END { flush() }
+    ' "$f" >"$new" 2>/dev/null; then
+      echo "memory: compact failed for $f — file unchanged" >&2
+      rm -f "$new"; rc=1; continue
+    fi
+
+    # Compaction keeps every entry header. If that invariant broke, do not
+    # write: losing an id is worse than not reclaiming bytes.
+    local old_n new_n
+    old_n=$(count_entries "$f"); old_n="${old_n:-0}"
+    new_n=$(count_entries "$new"); new_n="${new_n:-0}"
+    if [ "$new_n" -ne "$old_n" ]; then
+      echo "memory: compact aborted for $f — entry count would change ($old_n -> $new_n)" >&2
+      rm -f "$new"; rc=1; continue
+    fi
+
+    before=$(wc -c <"$f" 2>/dev/null | tr -d ' ')
+    after=$(wc -c <"$new" 2>/dev/null | tr -d ' ')
+    if cmp -s "$new" "$f"; then
+      rm -f "$new"
+      continue
+    fi
+    # Never grow a file. A layout-only difference (an entry already compacted
+    # but missing its trailing blank line) reclaims nothing; skip it.
+    if [ "$after" -ge "$before" ]; then
+      rm -f "$new"
+      continue
+    fi
+
+    if atomic_write "$new" "$f"; then
+      reclaimed=$((reclaimed + before - after))
+      changed=1
+    else
+      echo "memory: compact write failed for $f — file unchanged" >&2
+      rc=1
+    fi
+  done
+
+  local n_compacted=0 n_dup=0 missing="" conflicts="" tag file id extra
+  while IFS=$'\t' read -r tag file id extra; do
+    [ -n "${tag:-}" ] || continue
+    case "$tag" in
+      C) n_compacted=$((n_compacted + 1)) ;;
+      D) n_dup=$((n_dup + ${extra:-0})) ;;
+      N) missing="$missing $id" ;;
+      X) conflicts="$conflicts"$'\n'"        $id: $extra" ;;
+    esac
+  done <"$diag"
+
+  after=$(live_bytes)
+  local kept_n
+  kept_n=$(live_entries)
+  if [ "$changed" -eq 0 ]; then
+    info "compact: nothing to compact — no retracted body left to reclaim (live ${after}B / ${BUDGET_BYTES}B budget)"
+  else
+    info "compacted ${n_compacted} retracted entr$( [ "$n_compacted" -eq 1 ] && echo y || echo ies) — reclaimed ${reclaimed}B"
+    info "kept ${kept_n} entr$( [ "$kept_n" -eq 1 ] && echo y || echo ies) — believed bodies and every header/pointer are intact (live ${after}B / ${BUDGET_BYTES}B budget)"
+  fi
+  if [ "$n_dup" -gt 0 ]; then
+    info "removed ${n_dup} duplicate 'Promoted to:' line(s) — one pointer per retracted entry"
+  fi
+  if [ -n "$conflicts" ]; then
+    info "conflicting promotion targets — kept the most recent retraction's target:$conflicts"
+  fi
+  if [ -n "$missing" ]; then
+    for id in $missing; do
+      echo "memory: LEFT IN PLACE — $id is retracted but has no 'Promoted to:' line." >&2
+      echo "        Its knowledge has no recorded home; a human must name one." >&2
+      echo "        Add the pointer with: memory retract $id --promoted-to <file>" >&2
+    done
+    rc=1
+  fi
+  exit $rc
+}
+
+# ── read ──────────────────────────────────────────────────────────────────────
+cmd_read() {
+  local what="${1:-all}" f
+  case "$what" in
+    decision|decisions) cat "$DECISIONS" 2>/dev/null ;;
+    learning|learnings) cat "$LEARNINGS" 2>/dev/null ;;
+    current)            cat "$CURRENT"  2>/dev/null ;;
+    archive)            ls -1 "$ARCHIVE" 2>/dev/null || echo "(no archive yet)" ;;
+    all)
+      for f in "$DECISIONS" "$LEARNINGS" "$CURRENT"; do
+        if [ -f "$f" ]; then echo "=== $(basename "$f") ==="; cat "$f"; echo; fi
+      done
+      ;;
+    *) die "read: unknown target '$what' (decision|learning|current|archive|all)" ;;
+  esac
+  exit 0
+}
+
+# ── archive (explicit) ────────────────────────────────────────────────────────
+cmd_archive() {
+  local kind rc=0 before_bytes after_bytes before_entries after_entries guard=0
+  local pick pick_n n
+  before_bytes=$(live_bytes)
+  before_entries=$(live_entries)
+  for kind in decision learning current; do
+    enforce_bound "$kind" || rc=1
+  done
+
+  # The entry-count bound is not the byte bound. If the files are still over
+  # budget, roll the oldest entry from the largest live file until they fit.
+  while [ "$(live_bytes)" -gt "$BUDGET_BYTES" ] && [ "$guard" -lt 200 ]; do
+    pick=""; pick_n=0
+    for kind in decision learning current; do
+      local f
+      f="$(file_for_kind "$kind")"
+      [ -f "$f" ] || continue
+      n=$(count_entries "$f"); n="${n:-0}"
+      if [ "$n" -gt "$pick_n" ]; then pick="$kind"; pick_n="$n"; fi
+    done
+    [ -n "$pick" ] && [ "$pick_n" -gt 1 ] || break
+    ENFORCE_KEEP=$((pick_n - 1)) enforce_bound "$pick" || { rc=1; break; }
+    guard=$((guard + 1))
+  done
+
+  after_bytes=$(live_bytes)
+  after_entries=$(live_entries)
+  if [ "$after_bytes" -gt "$BUDGET_BYTES" ]; then
+    echo "memory: archive: live files still total ${after_bytes}B; the last entries are too large to roll — remove or shorten one." >&2
+    rc=1
+  elif [ "$after_bytes" -lt "$before_bytes" ] || [ "$after_entries" -lt "$before_entries" ]; then
+    info "archive complete — live size ${after_bytes}B / ${BUDGET_BYTES}B budget"
+  elif [ "$rc" -eq 0 ]; then
+    info "archive: nothing to do — all live files are within bound"
+  fi
+  return $rc
+}
+
+# ── check ─────────────────────────────────────────────────────────────────────
+# One command for observability, maintenance and the secret gate.
+#
+# At 90% of a kind's bound, roll the oldest entries into the archive until that
+# kind is below 90%. The archive is still searchable, so this is a live-window
+# trim, not data loss. Then report bytes and scan the live files for secrets.
+cmd_check() {
+  local rc=0 bytes f kind n bound pct oldest scanrc
+  # `check` can archive below, so it is a writer and must hold the same lock
+  # as add/archive. A read-only fast path here raced with a concurrent add and
+  # could archive from a stale count.
+  acquire_lock || return 1
+  bytes=$(live_bytes)
+
+  for kind in decision learning current; do
+    f="$(file_for_kind "$kind")"
+    n=$(count_entries "$f"); n="${n:-0}"
+    bound="$(bound_for_kind "$kind")"
+    pct=$(( n * 100 / bound ))
+    printf '%s: %s/%s (%s%%)\n' "$kind" "$n" "$bound" "$pct"
+    if [ "$pct" -ge 90 ] && [ "$n" -gt 0 ]; then
+      oldest=$(grep -oE '^## [DLC]-[0-9]{4}' "$f" 2>/dev/null | sed 's/^## //' | head -1)
+      printf '  action: %s at %s/%s — rolling oldest entry%s\n' \
+        "$kind" "$n" "$bound" "${oldest:+ ($oldest)}"
+      while [ "$n" -gt 0 ] && [ "$pct" -ge 90 ]; do
+        ENFORCE_KEEP=$((n - 1))
+        if ! enforce_bound "$kind"; then
+          unset ENFORCE_KEEP
+          rc=1
+          break
+        fi
+        unset ENFORCE_KEEP
+        n=$(count_entries "$f"); n="${n:-0}"
+        pct=$(( n * 100 / bound ))
+      done
+      printf '  after: %s %s/%s (%s%%)\n' "$kind" "$n" "$bound" "$pct"
+    fi
+  done
+
+  bytes=$(live_bytes)
+  if [ "$bytes" -gt "$BUDGET_BYTES" ]; then
+    echo "memory: BOUND EXCEEDED — live files total ${bytes}B, budget is ${BUDGET_BYTES}B." >&2
+    echo "        Run 'memory compact' to reclaim the bodies of already-retracted entries first;" >&2
+    echo "        if that is not enough, 'memory archive' rolls the oldest entries." >&2
+    rc=3
+  else
+    info "live size ${bytes}B / ${BUDGET_BYTES}B budget — OK"
+    if [ "$bytes" -ge $((BUDGET_BYTES * 9 / 10)) ]; then
+      echo "memory: warning — byte budget is at or above 90%; run 'memory compact' if retracted bodies remain." >&2
+    fi
+  fi
+
+  for f in "$DECISIONS" "$LEARNINGS" "$CURRENT"; do
+    [ -f "$f" ] || continue
+    scanrc=0
+    scan_secrets "$(cat "$f")" || scanrc=$?
+    if [ "$scanrc" -eq 2 ]; then
+      echo "memory: CREDENTIAL-SHAPED VALUE IN $f" >&2
+      rc=2
+    fi
+  done
+  return $rc
+}
+
+# ── log ───────────────────────────────────────────────────────────────────────
+# Show the requested entry. Its own `Supersedes:` and `Promoted to:` lines are
+# included, but a `Supersedes:` line names the predecessor; it does not print
+# the predecessor's body. Entries that supersede this id are printed too (one
+# hop forward), so `log D-0001` shows D-0002. Run `log <predecessor>` to follow
+# back, one hop at a time.
+cmd_log() {
+  local id="${1:-}" found=0 f hits
+  [ -n "$id" ] || die "usage: memory log <id>"
+  for f in "$DECISIONS" "$LEARNINGS" "$CURRENT" "$ARCHIVE"/*.md; do
+    [ -f "$f" ] || continue
+    hits=$(awk -v id="$id" '
+      function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+      function flush() {
+        if (hdr == "") return
+        if (eid == id || sup == id) {
+          print hdr
+          if (body != "") printf "%s", body
+          if (sup != "") print "Supersedes: " sup
+          if (promos != "") printf "%s", promos
+          print ""
+          found = 1
+        }
+        hdr = ""; eid = ""; body = ""; sup = ""; promos = ""
+      }
+      /^## [DLC]-[0-9][0-9][0-9][0-9] \|/ {
+        flush()
+        hdr = $0
+        split($0, p, "|")
+        eid = trim(p[1]); sub(/^##[ \t]+/, "", eid); eid = trim(eid)
+        next
+      }
+      /^Supersedes: / { sup = $0; sub(/^Supersedes: /, "", sup); next }
+      /^Promoted to: / { promos = promos $0 "\n"; next }
+      { if (hdr != "") body = body $0 "\n" }
+      END { flush(); if (!found) exit 1 }
+    ' "$f")
+    if [ -n "$hits" ]; then
+      printf '== %s ==\n%s\n' "$(basename "$f")" "$hits"
+      found=1
+    fi
+  done
+  [ "$found" -eq 1 ] || die "no entry $id (ids look like D-0001, L-0001, C-0001)"
+}
+
+cmd_search() {
+  local terms="$*" found=0 f hits
+  [ -n "${terms// }" ] || die "usage: memory search <terms>"
+  for f in "$DECISIONS" "$LEARNINGS" "$CURRENT" "$ARCHIVE"/*.md; do
+    [ -f "$f" ] || continue
+    hits=$(awk -v pat="$terms" '
+      /^## [DLC]-[0-9][0-9][0-9][0-9] \|/ { id=$2 }
+      index(tolower($0), tolower(pat)) && id != "" { printf "%s: %s\n", id, $0 }
+    ' "$f")
+    if [ -n "$hits" ]; then
+      printf '%s\n' "$hits"
+      found=1
+    fi
+  done
+  [ "$found" -eq 1 ] || { echo "memory: no match for '$terms'" >&2; return 1; }
+}
+
+case "${1:-}" in
+  add)     shift; cmd_add "$@" ;;
+  confirm) shift; cmd_confirm "$@" ;;
+  retract) shift; cmd_retract "$@" ;;
+  read)    shift; cmd_read "$@" ;;
+  search)  shift; cmd_search "$@" ;;
+  log)     shift; cmd_log "$@" ;;
+  archive) shift; cmd_archive "$@" ;;
+  compact) shift; cmd_compact "$@" ;;
+  check)   shift; cmd_check "$@" ;;
+  -h|--help|help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *) die "usage: memory [--agent <name>] <add|confirm|retract|read|search|log|archive|compact|check>   (see 'memory --help')" ;;
+esac

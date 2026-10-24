@@ -1,13 +1,15 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
+const repoRoot = path.join(__dirname, "../..");
+
 const nextConfig: NextConfig = {
-  // Pin the project root so Next.js stops walking up the filesystem
-  // looking for sibling lockfiles (we have one at /run/media/khan/Studio/Projects/package-lock.json
-  // from a different project that confused Turbopack).
-  outputFileTracingRoot: path.join(__dirname),
+  // Pin every resolver to the monorepo root. With a lockfile at the repo root,
+  // Turbopack infers the workspace root; pinning to the app dir breaks module
+  // resolution (it cannot find the Next.js package from the workspace).
+  outputFileTracingRoot: repoRoot,
   turbopack: {
-    root: path.join(__dirname),
+    root: repoRoot,
   },
   transpilePackages: ['@mdxeditor/editor'],
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],

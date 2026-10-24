@@ -1,0 +1,19 @@
+# Zolly office configuration for this project.
+#
+# Precedence: environment variable > this file > default.
+#   ZOLLY_FREQUENCY, ZOLLY_FOUNDER, ZOLLY_BASE_BRANCH, ZOLLY_REMOTE,
+#   ZOLLY_CONTRIBUTE
+#
+# The installer writes this file; edit it directly any time — nothing else
+# reads the values, this file does.
+frequency = "frontend-shifaul-dev"
+founder = "Shifaul"
+base_branch = "master"
+remote = "origin"
+voice = false
+# Public automatic bug reports to khanshifaul/zolly. Policy:
+# https://github.com/khanshifaul/zolly/blob/main/CONTRIBUTING.md
+contribute = true
+contribution_policy = 1
+# The project's display name, used in the office's own greetings.
+project = "frontend.shifaul.dev"

@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: backend-shifaul
+    runtime: bun
+    plan: free
+    buildCommand: >-
+      bun install &&
+      bun run --filter '@shifaul/api' db:generate &&
+      bun run --filter '@shifaul/api' build
+    startCommand: bun run --filter '@shifaul/api' start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production

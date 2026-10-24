@@ -1,0 +1,26 @@
+{
+  "name": "shifaul.dev",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "bun run --parallel --filter '@shifaul/*' dev",
+    "dev:api": "bun --filter '@shifaul/api' dev",
+    "dev:web": "bun --filter '@shifaul/web' dev",
+    "build": "bun --filter '@shifaul/*' build",
+    "build:api": "bun --filter '@shifaul/api' build",
+    "build:web": "bun --filter '@shifaul/web' build",
+    "start": "bun run --parallel --filter '@shifaul/*' start",
+    "test": "bun --filter '@shifaul/api' test",
+    "test:e2e": "bun --filter '@shifaul/api' test:e2e",
+    "lint": "bun --filter '@shifaul/*' lint",
+    "format": "bun --filter '@shifaul/api' format",
+    "db:generate": "bun --filter '@shifaul/api' db:generate",
+    "db:migrate": "bun --filter '@shifaul/api' db:migrate",
+    "db:push": "bun --filter '@shifaul/api' db:push",
+    "db:seed": "bun --filter '@shifaul/api' db:seed",
+    "db:studio": "bun --filter '@shifaul/api' db:studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

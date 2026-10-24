@@ -1,0 +1,418 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider     = "prisma-client"
+  output       = "generated"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/**
+ * ============================================================
+ * POSTGRESQL MODELS
+ * ============================================================
+ */
+
+model User {
+  id                 String     @id @default(cuid())
+  email              String     @unique @db.VarChar(255)
+  name               String     @db.VarChar(255)
+  password           String?    @db.VarChar(255)
+  avatar             String?    @db.Text
+  isEmailVerified    Boolean    @default(false)
+  emailVerifiedAt    DateTime?
+  verificationToken  String?    @unique @db.Text
+  twoFactorSecret    String?    @db.VarChar(255)
+  resetToken         String?    @unique @db.VarChar(255)
+  resetTokenExpires  DateTime?
+  isTwoFactorEnabled Boolean    @default(false)
+  backupCodes        String[]   @default([])
+  roles              String[]   @default(["user"])
+  status             UserStatus @default(ACTIVE)
+  suspensionReason   String?    @db.Text
+  suspendedAt        DateTime?
+  metadata           Json?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  // Relations
+  authProviders   AuthProvider[]
+  sessions        UserSession[]
+  supportTickets  SupportTicket[]       @relation("CreatedTickets")
+  assignedTickets SupportTicket[]       @relation("AssignedTickets")
+  ticketReplies   TicketReply[]         @relation("ReplyAuthors")
+  reopenRequests  TicketReopenRequest[] @relation("ReopenRequesters")
+  reopenReviews   TicketReopenRequest[] @relation("ReopenReviewers")
+
+  @@index([email, status])
+  @@index([createdAt])
+  @@index([resetToken, resetTokenExpires])
+  @@map("users")
+}
+
+model AuthProvider {
+  id             String           @id @default(cuid())
+  userId         String
+  provider       AuthProviderType
+  providerId     String           @db.VarChar(255)
+  email          String?          @db.VarChar(255)
+  accessToken    String?          @db.Text
+  refreshToken   String?          @db.Text
+  tokenExpiresAt DateTime?
+  providerData   Json?
+  isPrimary      Boolean          @default(false)
+  linkedAt       DateTime         @default(now())
+  lastUsedAt     DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([provider])
+  @@index([providerId])
+  @@map("auth_providers")
+}
+
+model UserSession {
+  id                          String    @id @default(cuid())
+  userId                      String
+  sessionId                   String    @unique @db.VarChar(255)
+  deviceInfo                  Json?
+  ipAddress                   String?   @db.VarChar(45)
+  userAgent                   String?   @db.Text
+  location                    String?   @db.VarChar(100)
+  browserFingerprintHash      String?   @db.VarChar(255)
+  deviceFingerprintConfidence Float?    @default(0.5)
+  latitude                    Float?
+  longitude                   Float?
+  timezone                    String?   @db.VarChar(50)
+  riskScore                   Float     @default(0)
+  lastIpChangeAt              DateTime?
+  accessCount                 Int       @default(0)
+  unusualActivityCount        Int       @default(0)
+  isActive                    Boolean   @default(true)
+  expiresAt                   DateTime
+  lastActivity                DateTime  @default(now())
+  rememberMe                  Boolean   @default(false)
+  invalidatedAt               DateTime?
+  invalidationReason          String?   @db.VarChar(100)
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+
+  @@index([userId, isActive])
+  @@index([expiresAt])
+  @@index([riskScore])
+  @@index([ipAddress, createdAt])
+  @@map("user_sessions")
+}
+
+model RefreshToken {
+  id          String    @id @default(cuid())
+  sessionId   String
+  tokenHash   String    @unique @db.VarChar(255)
+  tokenFamily String?   @db.VarChar(255)
+  isActive    Boolean   @default(true)
+  usedAt      DateTime?
+  expiresAt   DateTime
+  ipAddress   String?   @db.VarChar(45)
+  userAgent   String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  session UserSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([expiresAt])
+  @@index([isActive])
+  @@map("refresh_tokens")
+}
+
+model SupportTicket {
+  id           String       @id @default(cuid())
+  title        String       @db.VarChar(255)
+  description  String?      @db.Text
+  status       TicketStatus @default(OPEN)
+  priority     Priority     @default(NORMAL)
+  type         TicketType   @default(GENERAL)
+  createdById  String?
+  assignedToId String?
+  assignedAt   DateTime?
+  closedAt     DateTime?
+  fileUrls     String[]     @default([])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Relations
+  createdBy      User?                 @relation("CreatedTickets", fields: [createdById], references: [id], onDelete: SetNull)
+  assignedTo     User?                 @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
+  replies        TicketReply[]
+  reopenRequests TicketReopenRequest[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([createdById])
+  @@index([assignedToId])
+  @@map("support_tickets")
+}
+
+model TicketReply {
+  id         String   @id @default(cuid())
+  ticketId   String
+  authorId   String?
+  content    String   @db.Text
+  isInternal Boolean  @default(false)
+  fileUrls   String[] @default([])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User?         @relation("ReplyAuthors", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+  @@index([authorId])
+  @@map("ticket_replies")
+}
+
+model TicketReopenRequest {
+  id            String       @id @default(cuid())
+  ticketId      String
+  requestedById String?
+  reason        String       @db.Text
+  status        ReopenStatus @default(PENDING)
+  reviewedById  String?
+  reviewedAt    DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  requestedBy User?         @relation("ReopenRequesters", fields: [requestedById], references: [id], onDelete: SetNull)
+  reviewedBy  User?         @relation("ReopenReviewers", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+  @@index([requestedById])
+  @@index([status])
+  @@map("ticket_reopen_requests")
+}
+
+enum AuthProviderType {
+  LOCAL
+  GOOGLE
+  FACEBOOK
+  GITHUB
+  TWITTER
+  LINKEDIN
+  MICROSOFT
+  APPLE
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ReopenStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TicketType {
+  GENERAL
+  TECHNICAL
+  BILLING
+  FEEDBACK
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  DELETED
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @db.VarChar(255)
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@map("contact_messages")
+}
+
+/// Contact requests triggered by the AI assistant chat (visitor asks to be
+/// contacted or to pass a message to Shifaul). Distinct from ContactMessage
+/// (which is for the form at /contact).
+model ContactRequest {
+  id           String   @id @default(cuid())
+  sessionKey   String?  @db.VarChar(255)
+  visitorEmail String?  @db.VarChar(255)
+  visitorName  String?  @db.VarChar(255)
+  intent       String   // e.g. "talk", "interview", "project", "callback"
+  message      String   @db.Text
+  context      Json?    // last 3-5 chat turns at the time of request
+  channel      String   @default("telegram") // telegram | email | etc.
+  status       String   @default("pending") // pending | sent | failed
+  sentAt       DateTime?
+  sendError    String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([sessionKey])
+  @@index([createdAt])
+  @@map("contact_requests")
+}
+
+model NewsletterSubscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique @db.VarChar(255)
+  subscribedAt DateTime @default(now())
+
+  @@map("newsletter_subscribers")
+}
+
+model BlogPost {
+  id         String   @id @default(cuid())
+  title      String
+  slug       String   @unique
+  thumbnail  String
+  content    String   @db.Text
+  tags       Tag[]    @relation("BlogPostTags")
+  reactions  Int      @default(0)
+  views      Int      @default(0)
+  authorId   String
+  authorName String
+  published  Boolean @default(false) @db.Boolean
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([slug])
+  @@index([published])
+  @@map("blog_posts")
+}
+
+model Tag {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  blogPosts BlogPost[] @relation("BlogPostTags")
+  projects  Project[]  @relation("ProjectTags")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([name])
+  @@map("tags")
+}
+
+model Project {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  subtitle     String?
+  client       String?
+  logo         String?
+  services     String[]
+  technologies String[]
+  website      String
+  thumbnail    String
+  about        String   @db.Text
+  goal         String   @db.Text
+  execution    String   @db.Text
+  results      String   @db.Text
+  goalImages   String[]
+  resultImages String[]
+  tags         Tag[]    @relation("ProjectTags")
+  published    Boolean  @default(false) @db.Boolean
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([slug])
+  @@index([published])
+  @@map("projects")
+}
+
+model VisitorEvent {
+  id        String   @id @default(cuid())
+  event     String   // e.g., 'page_view', 'click'
+  url       String
+  referrer  String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([event])
+  @@index([createdAt])
+  @@map("visitor_events")
+}
+
+/// ============================================================
+/// AI ASSISTANT - RAG Knowledge Base
+/// ============================================================
+
+model KnowledgeChunk {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  source    String
+  sourceUrl String?
+  metadata  Json?
+  embedding Float[]  @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([source])
+  @@index([createdAt])
+  @@map("knowledge_chunks")
+}
+
+model ChatSession {
+  id         String        @id @default(cuid())
+  sessionKey String        @unique @db.VarChar(255)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  messages   ChatMessage[]
+
+  @@index([sessionKey])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  role      ChatRole
+  content   String   @db.Text
+  sources   Json?
+  tokens    Int?
+  createdAt DateTime @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}

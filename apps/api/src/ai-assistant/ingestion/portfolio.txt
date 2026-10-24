@@ -1,0 +1,48 @@
+Shifaul Islam — Portfolio
+
+Welcome to the digital vault. Below is a stream of projects, experiments, and architectural artifacts.
+
+Production projects
+
+CalQuick — calquick.app
+A SaaS commerce platform built for merchants. Shifaul led the frontend architecture with React, TailwindCSS, and RTK Query, integrated with Node.js and Express APIs.
+
+PixlyOne — pixlyone.io
+A server-side tag management (sGTM) platform. Shifaul led full-stack development — a React dashboard plus NestJS APIs for server-side tag management, event tracking, multi-tenant logic, and marketing pixel integrations.
+
+Bakers Bay — store.bakersbay.live
+A full-stack inventory and sales management system built for Fixtrack. Stack: Next.js, Node.js, Prisma, Tailwind CSS.
+
+MediGadget — medi-gadget-iota.vercel.app
+A full-stack e-commerce platform with Next.js, GraphQL, Prisma, AuthJS, Redux, and real-time admin dashboards.
+
+Emegadeal, GloreBD, Glamgirl
+Multiple e-commerce storefronts built with Next.js, consuming CalQuick APIs with optimized data fetching and React performance techniques.
+
+Rufaida Enterprise — rufaidaenterprise.com
+Customized and optimized a WordPress site, modifying themes, enhancing UI/UX, and delivering a fully responsive production-ready frontend.
+
+Automation Script Executor — exec.pixlyone.io/api/docs
+A secure Bash script execution service with NestJS, featuring logging and permission checks.
+
+Personal projects
+
+backend.shifaul.dev
+API infrastructure powering the personal portfolio and integrated blogging experience.
+
+hospital.shifaul.dev
+A healthcare management system designed to streamline clinical workflows and patient care.
+
+fudee.shifaul.dev
+A modern, multi-module restaurant management ecosystem.
+
+urlshortner.shifaul.dev
+An enterprise-grade URL shortening platform with real-time analytics.
+
+@srcroot/ui
+A UI library with polymorphic, accessible React components, distributed on npm.
+
+@srcroot/editor
+A comprehensive rich text editor for React based on Slate.js, distributed on npm.
+
+Featured technologies across all projects: Next.js, NestJS, TypeScript, React, Node.js, PostgreSQL, Prisma, MongoDB, Redis, GraphQL, REST, Docker, Nginx, Tailwind CSS, Langchain, PyTorch, Hugging Face, OpenAI API.

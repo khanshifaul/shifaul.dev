@@ -1,0 +1,44 @@
+Md Shifaul Islam — About
+
+I am Md Shifaul Islam, a dedicated Full Stack Web Developer with 3+ years of experience building user-centric applications.
+
+I specialize in the Next.js and NestJS ecosystem. I excel at architecting robust, high-performance systems — from SaaS commerce platforms to secure enterprise solutions.
+
+My vision is to bridge the gap between human thought and digital action through AI/ML and Brain-Computer Interfaces.
+
+Current Status: OPEN FOR HIRE.
+
+Skills — Core Protocols
+Python, JavaScript (ES6+), TypeScript, PHP, C++/MicroPython, Rust.
+
+Skills — Frontend Systems
+React.js/Next.js, Vue.js/Nuxt.js, Tailwind CSS/Bootstrap, Redux/Vuex, Framer Motion/GSAP.
+
+Skills — Backend Architectures
+Node.js/NestJS, REST API/GraphQL, OAuth/JWT, WebSockets/Socket.io, Microservices.
+
+Skills — Data Persistence
+PostgreSQL/Prisma, MongoDB/Mongoose, Redis Cache, Supabase/Firebase, Vector Databases.
+
+Skills — DevOps and QA
+Git/GitHub, Docker/Nginx, CI/CD (Vercel), Selenium/BeautifulSoup, Jest/Playwright/Cypress.
+
+Skills — Neural Networks and AI
+Langchain/Ollama, Hugging Face Hub, PyTorch/TensorFlow, OpenAI API Integration, Computer Vision.
+
+Skills — Cyber-Physical Systems
+Arduino/ESP32, IoT Architectures, MQTT Protocol, Raspberry Pi, Firmware Development.
+
+Skills — Creative and Tools
+Figma/Webflow, Adobe Photoshop/Illustrator, After Effects, MS Office/Google Workspace.
+
+Certifications and Specialized Training
+- Scalable NestJS Architectures
+- TypeScript 5 for Large-Scale Enterprise Systems
+- Clean Code and SOLID Principles (Clean Coders Series)
+- Advanced React Design Patterns and SSR Mastery
+- Modern API Architectures (REST, GraphQL, gRPC)
+- Brain-Computer Interface (BCI) Research Summary
+- Vue 3 and Laravel Enterprise Integration
+- Advanced MERN Stack Development
+- Ethical Hacking and Web Penetration Testing

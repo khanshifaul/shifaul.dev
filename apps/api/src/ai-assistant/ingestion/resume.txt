@@ -1,0 +1,180 @@
+Md Shifaul Islam — Full Stack Web Developer
+
+Contact
+- Email: khanshifaul@gmail.com
+- Phone/WhatsApp: +88 01701 005355
+- Portfolio: https://shifaul.dev
+- Location: 405/A, West Shewrapara, Mirpur-1216, Dhaka, Bangladesh
+- GitHub: https://github.com/khanshifaul, https://github.com/shifaul-expressitbd
+- LinkedIn: https://linkedin.com/in/khan-shifaul
+
+Professional Summary
+Shifaul Islam is a dedicated Full Stack Web Developer with 3+ years of progressive experience building and scaling user-centric web applications. He specializes in the Next.js and NestJS ecosystem, architecting robust, high-performance systems including SaaS commerce platforms and secure enterprise solutions. He is highly adept in modern JavaScript/TypeScript development, REST/GraphQL API design, and cloud infrastructure management with Nginx and Docker. He is committed to continuous learning and leverages emerging technologies including AI/ML to contribute to innovative remote development teams.
+
+Current Status
+Open for hire. Available for full-time remote contracts and short-term engagements.
+
+Technical Skills
+
+Programming Languages
+- Python, JavaScript, TypeScript, PHP
+
+Frontend
+- React.js, Vue.js, Next.js, Nuxt.js, Tailwind CSS, Bootstrap, Redux, Vuex
+- Framer Motion, GSAP
+
+Backend
+- Node.js, Nest.js, REST API, GraphQL, OAuth, JWT
+- Microservices, WebSockets, Socket.io
+
+Databases and ORM
+- PostgreSQL, MongoDB, Prisma
+- Redis cache, Supabase, Firebase
+
+AI/ML Development
+- Langchain, Hugging Face Hub, Ollama
+- PyTorch, TensorFlow, OpenAI API Integration
+- Computer Vision
+
+Embedded Systems and IoT
+- Arduino, ESP32, MicroPython, Raspberry Pi
+- MQTT protocol, firmware development
+
+Automation and Testing
+- Selenium, BeautifulSoup
+- Jest, Cypress, Playwright
+
+DevOps
+- Git, GitHub, Docker, Nginx, PM2
+- Ubuntu server administration
+- CI/CD on Vercel
+
+Design
+- Figma, Webflow
+- Adobe Photoshop, Illustrator, After Effects
+
+Work Experience
+
+Full Stack Web Developer at ExpressITbd (Full-time, March 2025 to January 2026)
+- Built full-stack applications using React and Next.js for frontend and Node.js/NestJS for backend.
+- Designed and integrated REST APIs across services for e-commerce and internal platforms.
+- Managed infrastructure on Ubuntu with Nginx, PM2, and Docker. Automated build pipelines.
+- Monitored and optimized production systems including logging, performance, and error tracking.
+- Integrated analytics tools like Google Tag Manager for marketing and tracking.
+- Boosted performance using ISR, caching, memoization, and code optimization.
+
+Project: CalQuick — SaaS Commerce Platform
+- Architected the frontend using React, TailwindCSS, and RTK Query.
+- Integrated with Node.js/Express APIs.
+- Live at calquick.app.
+
+Project: E-Commerce Storefronts
+- Developed multiple Next.js storefronts consuming CalQuick APIs.
+- Optimized data fetching and React performance.
+- Live sites: emegadeal.com, glorebd.com, glamgirl.com.bd.
+
+Project: PixlyOne — Server-Side Tag Management Platform
+- Led full-stack development.
+- Built a React dashboard and NestJS APIs for server-side tag management, event tracking, multi-tenant logic, and marketing pixel integrations.
+- Live at pixlyone.io.
+
+Project: Automation Script Executor
+- Developed a secure Bash script execution service with NestJS.
+- Features logging and permission checks.
+- API docs at exec.pixlyone.io/api/docs.
+
+Frontend Developer at ExpressITbd (Full-time, March 2025 to October 2025)
+- Built responsive Next.js storefronts and dashboards.
+- Integrated tracking and analytics (sGTM, GTM).
+
+Full Stack Web Developer at Fixtrack (Contractual, Remote, December 2024 to February 2025)
+- Built Bakers Bay — a full-stack inventory and sales management system.
+- Stack: Next.js, Node.js, Prisma, Tailwind CSS.
+- Live at store.bakersbay.live.
+
+Full Stack Web Developer at Rufaida Enterprise (Contractual, Remote, May 2025 to July 2025)
+- Customized and optimized a WordPress site.
+- Modified themes, enhanced UI/UX, delivered a fully responsive production-ready frontend.
+- Live at rufaidaenterprise.com.
+
+Full Stack Web Developer at MediGadget (Contractual, Remote, January 2025 to February 2025)
+- Built a full-stack e-commerce platform.
+- Stack: Next.js, GraphQL, Prisma, AuthJS, Redux, real-time admin dashboards.
+- Live at medi-gadget-iota.vercel.app.
+
+Freelance Virtual Assistant on UpWork (Self-employed, Remote, 2019 to Present)
+- Executed lead generation, data mining, and document conversion tasks.
+- 4.7 out of 5 average rating with 95 percent accuracy.
+- 100 percent on-time delivery for 10+ clients.
+
+Computer Operator roles (2019 to 2025)
+- Worked at Hasan Computer and Digital Studio (Bogura), Emon Computer (Dhaka), Progress Education Family (Bogura).
+- Provided customer service including document and spreadsheet typing, graphic design, PC and laptop troubleshooting, online applications (visa, VAT and tax returns), printing services.
+- Managed exam result processing, typed exam questions, maintained student databases, digitized administrative workflows.
+
+Personal Projects
+
+@srcroot/ui
+- A UI library with polymorphic, accessible React components.
+- Components can be copied and pasted into apps.
+- Available on npm: https://www.npmjs.com/package/@srcroot/ui
+
+@srcroot/editor
+- A comprehensive batteries-included rich text editor for React based on Slate.js.
+- Available on npm: https://www.npmjs.com/package/@srcroot/editor
+
+backend.shifaul.dev
+- Robust API infrastructure powering the personal portfolio and integrated blogging experience.
+- API docs at https://backend.shifaul.dev/api/docs.
+
+hospital.shifaul.dev
+- A comprehensive healthcare management system designed to streamline clinical workflows and patient care.
+- Live at https://hospital.shifaul.dev/.
+
+fudee.shifaul.dev
+- A modern, multi-module restaurant management ecosystem.
+- Live at https://fudee.shifaul.dev/.
+
+urlshortner.shifaul.dev
+- An enterprise-grade URL shortening platform with real-time analytics.
+- API docs at https://urlshortner.shifaul.dev/api/docs.
+- App at https://appurlshortner.shifaul.dev/.
+
+Education
+
+Diploma in Engineering (CGPA 3.60 out of 4.00)
+- Arif Rabbi Polytechnic Institute
+- Technical Board
+- Computer Technology, 2024
+
+Secondary School Certificate (GPA 5.00 out of 5.00)
+- Guzia High School
+- Rajshahi Board
+- Science, 2015
+
+Training and Certifications
+
+- Fullstack Web Development (MERN) — Bohubrihi, 2023
+- Professional Digital Marketing — UYLab, 2023
+- PHP/Laravel Training — Next Tech Limited, 6 months, 2023
+- Admin Support and Virtual Assistance Training — Cybertech, 6 months, 2020
+- Scalable NestJS Architectures
+- TypeScript 5 for Large-Scale Enterprise Systems
+- Clean Code and SOLID Principles (Clean Coders Series)
+- Advanced React Design Patterns and SSR Mastery
+- Modern API Architectures (REST, GraphQL, gRPC)
+- Brain-Computer Interface (BCI) Research Summary
+- Vue 3 and Laravel Enterprise Integration
+- Advanced MERN Stack Development
+- Ethical Hacking and Web Penetration Testing
+
+Language Proficiency
+- Bengali: Native
+- English: Fluent
+- Hindi: Conversational
+- Russian: Elementary
+
+Soft Skills
+- Problem solving, adaptability, collaboration, communication
+- Client-centric mindset, continuous learning, attention to detail
+- Analytical thinking, resilience, initiative

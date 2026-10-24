@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: backend-shifaul
+    runtime: bun
+    buildCommand: bun install && bunx prisma generate && bunx nest build
+    startCommand: bun run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production

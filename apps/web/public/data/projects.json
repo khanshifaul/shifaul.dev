@@ -1,0 +1,1161 @@
+{
+  "success": true,
+  "message": "Published projects retrieved successfully (LOCAL_VAULT_FALLBACK)",
+  "data": [
+    {
+      "id": "project-agency-001",
+      "slug": "srcroot-agency",
+      "title": "SrcRoot - Full-Stack Digital Agency",
+      "subtitle": "Engineering Premium Digital Experiences",
+      "client": "Global Brands & Startups",
+      "logo": "",
+      "services": [
+        "Full-Stack Web Development",
+        "Mobile App Engineering",
+        "UI/UX Design Systems",
+        "Cloud Architecture"
+      ],
+      "technologies": [
+        "Next.js",
+        "React",
+        "TypeScript",
+        "Node.js",
+        "Tailwind CSS",
+        "AWS"
+      ],
+      "website": "https://agency.shifaul.dev",
+      "thumbnail": "/images/projects/agency/thumbnail.png",
+      "about": "SrcRoot is a specialized digital agency focused on building high-performance, high-aesthetic web and mobile applications. We bridge the gap between creative design and robust engineering to deliver premium digital products.",
+      "goal": "To provide world-class engineering services that help businesses scale their digital infrastructure with sub-second performance and modern aesthetics.",
+      "execution": "Leveraged the @srcroot/ui design system to maintain consistency across all client projects. Implemented automated CI/CD pipelines and cloud-native architectures to ensure high availability.",
+      "results": "Delivered over 20+ successful projects for global clients, establishing a reputation for engineering excellence and visual fluidity.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-05-01T10:00:00Z",
+      "updatedAt": "2026-05-07T06:45:00Z",
+      "tags": [
+        {
+          "id": "t-agency",
+          "name": "Agency"
+        },
+        {
+          "id": "t-engineering",
+          "name": "Engineering"
+        },
+        {
+          "id": "t-fullstack",
+          "name": "Fullstack"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-srcroot-ui-001",
+      "slug": "srcroot-ui",
+      "title": "@srcroot/ui - Design System",
+      "subtitle": "Polymorphic, Accessible React Component Library",
+      "client": "Open Source",
+      "logo": "",
+      "services": [
+        "Design System Engineering",
+        "React Component Architecture",
+        "WAI-ARIA Accessibility"
+      ],
+      "technologies": [
+        "React",
+        "TypeScript",
+        "Tailwind CSS",
+        "CVA",
+        "Clsx"
+      ],
+      "website": "https://www.npmjs.com/package/@srcroot/ui",
+      "github": "https://github.com/srcroot/ui",
+      "thumbnail": "",
+      "about": "@srcroot/ui is a high-performance design system providing polymorphic and accessible React components. It follows a copy-and-paste philosophy (similar to shadcn/ui) but with a focus on deep polymorphism and highly customizable variants using class-variance-authority.",
+      "goal": "To provide developers with a robust, accessible foundation for building complex UIs without the overhead of heavy runtime libraries.",
+      "execution": "Built with TypeScript for full type safety. Implemented a CLI for component distribution and initialized a comprehensive playground for real-time component testing.",
+      "results": "Published on NPM as a core library for all SrcRoot and ExpressITLab projects, ensuring design consistency across the entire ecosystem.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-04-20T10:00:00Z",
+      "updatedAt": "2026-05-05T12:00:00Z",
+      "tags": [
+        {
+          "id": "t-design-system",
+          "name": "Design System"
+        },
+        {
+          "id": "t-react",
+          "name": "React"
+        },
+        {
+          "id": "t-oss",
+          "name": "Open Source"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-srcroot-pm-001",
+      "slug": "srcroot-pm",
+      "title": "SrcRoot PM - Collaborative Kanban",
+      "subtitle": "High-Performance Project Management Dashboard",
+      "client": "Internal / SaaS",
+      "logo": "",
+      "services": [
+        "Product Management Tooling",
+        "Interactive Dashboard Design",
+        "Data Visualization"
+      ],
+      "technologies": [
+        "Next.js 15",
+        "@srcroot/ui",
+        "@dnd-kit",
+        "Recharts",
+        "Tailwind CSS"
+      ],
+      "website": "https://pm.shifaul.dev",
+      "thumbnail": "",
+      "about": "SrcRoot PM is a modern project management platform featuring a high-fidelity Kanban board, real-time data visualization, and an integrated knowledge base. It serves as the reference implementation for the @srcroot/ui design system.",
+      "goal": "To create a seamless, high-aesthetic workspace that unifies task tracking, team velocity analytics, and project documentation.",
+      "execution": "Built with the Next.js 15 App Router and leveraging @dnd-kit for fluid drag-and-drop interactions. Implemented complex data charting using Recharts and standardized the entire UI using the @srcroot/ui component library.",
+      "results": "Delivered a production-ready dashboard with responsive layouts, multi-theme support (Dark/Light), and optimized performance for handling large task volumes.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-05-04T10:00:00Z",
+      "updatedAt": "2026-05-05T12:00:00Z",
+      "tags": [
+        {
+          "id": "t-management",
+          "name": "Management"
+        },
+        {
+          "id": "t-dashboard",
+          "name": "Dashboard"
+        },
+        {
+          "id": "t-saas",
+          "name": "SaaS"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-calquick-001",
+      "slug": "calquick",
+      "title": "CalQuick - Enterprise SaaS Ecosystem",
+      "subtitle": "Multi-tenant inventory, POS, and e-commerce infrastructure.",
+      "client": "ExpressITLab",
+      "logo": "https://calquick.app/logo.png",
+      "services": [
+        "SaaS Architecture",
+        "Multi-tenant Database Design",
+        "POS Development",
+        "Courier API Integration"
+      ],
+      "technologies": [
+        "Next.js",
+        "Node.js",
+        "PostgreSQL",
+        "Prisma",
+        "Redis",
+        "Docker"
+      ],
+      "website": "https://calquick.app",
+      "thumbnail": "https://calquick.app/assets/og-image.png",
+      "about": "CalQuick is a comprehensive commerce ecosystem designed to bridge the gap between offline retail and online e-commerce. It provides a multi-tenant platform where business owners can manage inventory across multiple warehouses, process orders via a high-performance POS, and sync everything with a customizable storefront.",
+      "goal": "To build a 'single source of truth' for retail businesses in Bangladesh, integrating 14+ local courier partners and smart fraud detection to minimize return rates and maximize operational efficiency.",
+      "execution": "Implemented a modular micro-service architecture including a dedicated fraud checker, a theme deployment engine, and a secure storage layer. Leveraged NestJS for the backend and Next.js for the multi-role dashboard (Admin, Merchant, Employee).",
+      "results": "Successfully integrated 14+ courier APIs (Pathao, Steadfast, etc.) and achieved sub-second order processing times. The platform currently supports multi-tenant isolation with full GDPR-compliant data segregation.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2025-10-15T10:00:00Z",
+      "updatedAt": "2026-04-30T10:00:00Z",
+      "tags": [
+        {
+          "id": "t-saas",
+          "name": "SaaS"
+        },
+        {
+          "id": "t-pos",
+          "name": "POS"
+        },
+        {
+          "id": "t-fintech",
+          "name": "FinTech"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-clipx-001",
+      "slug": "clipX",
+      "title": "ClipX",
+      "subtitle": "Linux Clipboard Manager",
+      "client": "Open Source / Personal Project",
+      "logo": "",
+      "services": [
+        "System Programming",
+        "UI/UX Design",
+        "Automation"
+      ],
+      "technologies": [
+        "Rust",
+        "GTK3",
+        "Tokyo Night UI",
+        "Wayland"
+      ],
+      "github": "https://github.com/khanshifaul/clipx",
+      "thumbnail": "",
+      "about": "A fast, native, and stealthy clipboard manager for Linux, optimized for GNOME Wayland. It features a glassmorphic HUD built with a Tokyo Night aesthetic and a lightweight background daemon for persistent history.",
+      "goal": "To create a clipboard manager that feels like a native part of the OS, providing instant auto-pasting and fuzzy search without the clutter of traditional GUI apps.",
+      "execution": "Developed using Rust for the background daemon (`daemon.rs`) and GTK3 for the HUD (`ui.rs`). Implemented hardware-level input simulation via `ydotool` for Wayland compatibility.",
+      "results": "Delivered a production-ready `.deb` package with automated systemd service integration and global shortcut bindings.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-05-02T12:00:00Z",
+      "updatedAt": "2026-05-02T12:00:00Z",
+      "tags": [
+        {
+          "id": "t-rust",
+          "name": "Rust"
+        },
+        {
+          "id": "t-linux",
+          "name": "Linux"
+        },
+        {
+          "id": "t-system",
+          "name": "System"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "cmj241qc80004uopzshq2qek8",
+      "slug": "pixlyone",
+      "title": "PixlyOne - Server-Side Tracking",
+      "subtitle": "Privacy-First, Ad-Block Resistant Analytics Solution",
+      "client": "Digital Marketing Agencies",
+      "logo": "https://pixlyone.io/images/logo/logo.png",
+      "services": [
+        "Server-Side Tracking",
+        "Analytics Management",
+        "Privacy Compliance"
+      ],
+      "technologies": [
+        "React",
+        "TypeScript",
+        "Redux Toolkit",
+        "RTK Query",
+        "Node.js"
+      ],
+      "website": "https://pixlyone.io",
+      "thumbnail": "/images/projects/pixlyone/thumbnail-mockup.png",
+      "about": "PixlyOne is an enterprise-grade server-side tracking platform that helps marketers bypass ad blockers and maintain privacy compliance. It manages Server-side Google Tag Manager (sGTM) containers with sub-second dashboard performance.",
+      "goal": "To ensure 99.9% data collection accuracy while maintaining full GDPR/CCPA compliance.",
+      "execution": "Developed with a React/TypeScript frontend and a robust backend designed for handling 50,000+ daily impressions per container.",
+      "results": "Achieved 99.9% tracking reliability and reduced average page load times by 35% through server-side offloading.",
+      "goalImages": [
+        "/images/projects/pixlyone/architecture-mockup.png"
+      ],
+      "resultImages": [
+        "/images/projects/pixlyone/dashboard-mockup.png",
+        "/images/projects/pixlyone/tracking-result-mockup.png"
+      ],
+      "published": true,
+      "createdAt": "2025-12-12T00:10:06.044Z",
+      "updatedAt": "2025-12-12T11:38:04.505Z",
+      "tags": [
+        {
+          "id": "t-tracking",
+          "name": "Tracking"
+        },
+        {
+          "id": "t-analytics",
+          "name": "Analytics"
+        },
+        {
+          "id": "t-privacy",
+          "name": "Privacy"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-fudee-001",
+      "slug": "fudee-restaurent",
+      "title": "Fudee - Modern Restaurant Ecosystem",
+      "subtitle": "Comprehensive dining platform with live order tracking.",
+      "client": "Hospitality Sector",
+      "logo": "",
+      "services": [
+        "UI/UX Design",
+        "RBAC Architecture",
+        "Real-time Order Management"
+      ],
+      "technologies": [
+        "Next.js",
+        "GSAP",
+        "Framer Motion",
+        "Sonner"
+      ],
+      "website": "https://fudee.shifaul.dev",
+      "thumbnail": "",
+      "about": "Fudee is a multi-module restaurant platform designed for seamless dining experiences. It features a public-facing menu and reservation system, a customer portal for order tracking, and a powerful admin dashboard for live order management and analytics.",
+      "goal": "To architect a high-aesthetic, performant platform using GSAP for entrance sequences and Framer Motion for micro-interactions.",
+      "execution": "Implemented Role-Based Access Control (RBAC) to isolate Public, Portal, and Admin modules. Leveraged GSAP for staggering hero section animations and Sonner for global notification handling.",
+      "results": "Delivered a fluid, responsive interface with sub-second page transitions and a centralized management system for restaurant operators.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-03-20T10:00:00Z",
+      "updatedAt": "2026-03-20T10:00:00Z",
+      "tags": [
+        {
+          "id": "t-hospitality",
+          "name": "Hospitality"
+        },
+        {
+          "id": "t-uiux",
+          "name": "UI/UX"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "project-iot-001",
+      "slug": "iot-attendance-firmware",
+      "title": "SrcRoot IoT Attendance",
+      "subtitle": "Biometric & RFID Edge Computing Firmware",
+      "client": "Enterprise Security",
+      "logo": "",
+      "services": [
+        "Firmware Development",
+        "Hardware Integration",
+        "IoT Orchestration"
+      ],
+      "technologies": [
+        "ESP32",
+        "C++ / Arduino",
+        "RFID (MFRC522)",
+        "Fingerprint (R307)"
+      ],
+      "website": "https://github.com/khanshifaul/iot-attendance-firmware",
+      "thumbnail": "",
+      "about": "A sophisticated IoT attendance system built on the ESP32 platform. It integrates biometric fingerprint scanning, RFID card reading, and environment sensors (DHT11) to provide a complete edge-computing solution for workplace management.",
+      "goal": "To build a secure, async-capable firmware that handles real-time sensor data and provides a captive portal for device configuration.",
+      "execution": "Developed using the Arduino framework with specialized handlers for SPIFFS storage, async web servers, and multi-sensor polling. Implemented SHA-256 password hashing for local setup security.",
+      "results": "Successfully deployed a low-latency attendance device with integrated OLED status display and remote NTP time synchronization.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-02-15T12:00:00Z",
+      "updatedAt": "2026-02-15T12:00:00Z",
+      "tags": [
+        {
+          "id": "t-iot",
+          "name": "IoT"
+        },
+        {
+          "id": "t-hardware",
+          "name": "Hardware"
+        },
+        {
+          "id": "t-cpp",
+          "name": "C++"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-hospital-001",
+      "slug": "hospital-app",
+      "title": "Healthcare Management System",
+      "subtitle": "Patient-Centric Portal & Doctor Management",
+      "client": "Medical Institutions",
+      "logo": "",
+      "services": [
+        "Patient Portal Development",
+        "Doctor Scheduling",
+        "Emergency Logic"
+      ],
+      "technologies": [
+        "Next.js",
+        "TypeScript",
+        "Tailwind CSS"
+      ],
+      "website": "https://hospital.shifaul.dev",
+      "thumbnail": "",
+      "about": "A comprehensive healthcare platform providing modules for appointment booking, emergency services, and department management. It includes a dedicated portal for patient history and doctor availability tracking.",
+      "goal": "To streamline medical workflows and improve patient accessibility to healthcare services through a modern web interface.",
+      "execution": "Built with Next.js App Router, featuring optimized routes for different hospital departments and a robust scheduling engine.",
+      "results": "Reduced administrative overhead for appointment management and provided patients with a seamless booking experience.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-01-20T09:00:00Z",
+      "updatedAt": "2026-01-20T09:00:00Z",
+      "tags": [
+        {
+          "id": "t-health",
+          "name": "HealthTech"
+        },
+        {
+          "id": "t-management",
+          "name": "Management"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "project-wavemode-001",
+      "slug": "wavemode-music",
+      "title": "WaveMode",
+      "subtitle": "Premium Music Discovery Platform",
+      "client": "Personal Project",
+      "logo": "",
+      "services": [
+        "Audio Streaming Logic",
+        "Advanced UI Animations"
+      ],
+      "technologies": [
+        "Next.js",
+        "GSAP",
+        "Radix UI",
+        "Lucide"
+      ],
+      "website": "https://wavemode.shifaul.dev/",
+      "thumbnail": "",
+      "about": "WaveMode is a high-end music discovery platform that prioritizes visual fluidity and high-fidelity audio interaction. It features glassmorphic components and complex animation sequences.",
+      "goal": "To push the boundaries of web-based audio interfaces using modern animation libraries and accessibility primitives.",
+      "execution": "Built with Radix UI for accessible components and GSAP for intricate layout transitions. Integrated Recharts for audio visualization components.",
+      "results": "A highly interactive music dashboard that provides an immersive user experience beyond traditional streaming apps.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-04-05T15:00:00Z",
+      "updatedAt": "2026-04-05T15:00:00Z",
+      "tags": [
+        {
+          "id": "t-music",
+          "name": "Music"
+        },
+        {
+          "id": "t-animations",
+          "name": "Animations"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "project-teleprompter-001",
+      "slug": "pro-teleprompter",
+      "title": "Professional Teleprompter Utility",
+      "subtitle": "High-Contrast, Browser-Based Teleprompter",
+      "client": "Content Creators",
+      "logo": "",
+      "services": [
+        "Tool Development",
+        "Performance Optimization"
+      ],
+      "technologies": [
+        "React",
+        "CSS Grid",
+        "Lucide"
+      ],
+      "website": "",
+      "thumbnail": "",
+      "about": "A specialized tool for content creators that provides a high-contrast, customizable teleprompter interface directly in the browser. Supports mirror mode and adjustable scroll speeds.",
+      "goal": "To create a lightweight, zero-latency tool for video production.",
+      "execution": "Focused on GPU-accelerated scrolling and high-contrast typography to ensure readability across different lighting conditions.",
+      "results": "A reliable utility used for the automated Manhwa recap pipeline to ensure smooth narration delivery.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-04-10T11:00:00Z",
+      "updatedAt": "2026-04-10T11:00:00Z",
+      "tags": [
+        {
+          "id": "t-tools",
+          "name": "Tools"
+        },
+        {
+          "id": "t-productivity",
+          "name": "Productivity"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "project-gtm-001",
+      "slug": "gtm-service-cluster",
+      "title": "GTM Dual-Service Cluster",
+      "subtitle": "Cloud-Native Tagging Infrastructure",
+      "client": "Enterprise Analytics",
+      "logo": "",
+      "services": [
+        "Infrastructure Design",
+        "Containerization",
+        "Load Balancing"
+      ],
+      "technologies": [
+        "Docker",
+        "Nginx",
+        "Google Tag Manager",
+        "Shell Scripting"
+      ],
+      "website": "",
+      "thumbnail": "",
+      "about": "A high-availability cluster setup for Google Tag Manager (GTM) Server-Side tagging. It features dual tagging/preview server instances with automated health checks and optimized Nginx routing for multiple domains.",
+      "goal": "To provide a scalable, ad-block resistant analytics infrastructure for enterprise-scale data collection.",
+      "execution": "Developed a custom orchestration script (`run.sh`) and Docker Compose configuration to manage multiple GTM environments. Optimized Nginx headers for maximum privacy and cross-domain data persistence.",
+      "results": "Achieved 99.9% uptime for tagging services and enabled seamless preview/debug workflows for analytics teams.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2025-11-10T14:00:00Z",
+      "updatedAt": "2025-11-10T14:00:00Z",
+      "tags": [
+        {
+          "id": "t-devops",
+          "name": "DevOps"
+        },
+        {
+          "id": "t-analytics",
+          "name": "Analytics"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "project-maintenance-001",
+      "slug": "maintenance-server",
+      "title": "System Maintenance Proxy",
+      "subtitle": "High-Availability 503 Status Orchestrator",
+      "client": "Internal Infrastructure",
+      "logo": "",
+      "services": [
+        "Infrastructure Failover",
+        "Traffic Redirection",
+        "DevOps Utility"
+      ],
+      "technologies": [
+        "Node.js",
+        "Express",
+        "Docker",
+        "Nginx"
+      ],
+      "website": "",
+      "thumbnail": "",
+      "about": "A specialized Node.js utility designed to serve as a high-availability maintenance gateway. It intercepts incoming traffic during scheduled downtimes or emergency maintenance, providing clean, localized status pages while maintaining proper SEO response codes (503 Service Unavailable).",
+      "goal": "To provide a zero-config, lightweight failover solution that ensures a professional user experience during system updates.",
+      "execution": "Developed using Express.js with a global middleware handler. Containerized with Docker for rapid deployment across any micro-project in the ecosystem via centralized Nginx proxying.",
+      "results": "Streamlined the update cycle for multiple production platforms, allowing for 'Hot' maintenance swaps with minimal configuration overhead.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-02-20T10:00:00Z",
+      "updatedAt": "2026-02-20T10:00:00Z",
+      "tags": [
+        {
+          "id": "t-devops",
+          "name": "DevOps"
+        },
+        {
+          "id": "t-infrastructure",
+          "name": "Infrastructure"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "project-orosys-001",
+      "slug": "orosys",
+      "title": "OroSysBD - Enterprise Jewelry Shop Management",
+      "subtitle": "Comprehensive Business Operations Platform",
+      "client": "Corporate Clients",
+      "logo": "",
+      "services": [
+        "Full-Stack Development",
+        "Business Logic Design",
+        "Microservices"
+      ],
+      "technologies": [
+        "Next.js",
+        "Node.js",
+        "Microservices",
+        "Docker"
+      ],
+      "website": "https://orosysbd.app",
+      "thumbnail": "",
+      "about": "A multi-service enterprise platform designed for corporate management. It includes modules for service tracking, backend administration, and a public-facing portal for client interactions.",
+      "goal": "To centralize fragmented business operations into a single, cohesive digital ecosystem.",
+      "execution": "Developed using a microservice-oriented architecture with dedicated domains for frontend, backend, and specialized services.",
+      "results": "Streamlined internal workflows and provided a unified management dashboard for business stakeholders.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2025-08-15T09:00:00Z",
+      "updatedAt": "2025-08-15T09:00:00Z",
+      "tags": [
+        {
+          "id": "t-enterprise",
+          "name": "Enterprise"
+        },
+        {
+          "id": "t-saas",
+          "name": "SaaS"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "project-vet-001",
+      "slug": "veterinary-clinic",
+      "title": "VetCare - Veterinary Clinic",
+      "subtitle": "Specialized Healthcare for Animal Clinics",
+      "client": "Veterinary Clinics",
+      "logo": "",
+      "services": [
+        "Vertical SaaS Development",
+        "Medical Record Tracking"
+      ],
+      "technologies": [
+        "Next.js",
+        "TypeScript",
+        "Prisma"
+      ],
+      "website": "https://vet.shifaul.dev",
+      "thumbnail": "",
+      "about": "A vertical SaaS platform tailored for veterinary clinics. It manages patient records, appointment scheduling, and treatment history for animal patients.",
+      "goal": "To provide veterinarians with a specialized tool that addresses the unique needs of animal healthcare management.",
+      "execution": "Built with Next.js and Prisma, focusing on a highly intuitive UI for fast data entry during clinical procedures.",
+      "results": "Successfully automated record-keeping for multiple clinics, reducing paperwork and improving patient care tracking.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-02-10T12:00:00Z",
+      "updatedAt": "2026-02-10T12:00:00Z",
+      "tags": [
+        {
+          "id": "t-health",
+          "name": "HealthTech"
+        },
+        {
+          "id": "t-vertical-saas",
+          "name": "Vertical SaaS"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "project-zylosync-001",
+      "slug": "zylosync-commerce-engine",
+      "title": "ZyloSync - Enterprise Commerce Engine",
+      "subtitle": "Multi-tenant SaaS backend powering POS and E-commerce ecosystems.",
+      "client": "System Integrators",
+      "logo": "",
+      "services": [
+        "Backend Architecture",
+        "API Development",
+        "Data Synchronization",
+        "SaaS Infrastructure"
+      ],
+      "technologies": [
+        "NestJS",
+        "Prisma",
+        "PostgreSQL",
+        "Redis",
+        "TypeScript",
+        "Docker"
+      ],
+      "website": "https://zylosync.app",
+      "thumbnail": "",
+      "about": "ZyloSync is a robust, scalable multi-tenant engine designed to power modern retail and e-commerce applications. It provides a comprehensive set of APIs for managing inventory, product catalogs, and high-speed data synchronization between online storefronts and offline POS systems.",
+      "goal": "To create a high-performance, single-source-of-truth engine for distributed commerce operations.",
+      "execution": "Developed with a modular NestJS architecture and a 'schema-first' approach using Prisma. Integrated Redis for sub-millisecond data coordination across distributed nodes.",
+      "results": "Successfully deployed as the core infrastructure for multiple enterprise commerce platforms, handling complex multi-location stock movements.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2025-09-05T16:00:00Z",
+      "updatedAt": "2026-05-05T12:00:00Z",
+      "tags": [
+        {
+          "id": "t-backend",
+          "name": "Backend"
+        },
+        {
+          "id": "t-ecommerce",
+          "name": "E-commerce"
+        },
+        {
+          "id": "t-saas",
+          "name": "SaaS"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-zylosync-theme-001",
+      "slug": "zylosync-base-theme",
+      "title": "ZyloSync Base Theme",
+      "subtitle": "Modular Next.js 16 Storefront Foundation",
+      "client": "Storefront Merchants",
+      "logo": "",
+      "services": [
+        "Storefront Engineering",
+        "Theme System Architecture",
+        "Performance Optimization"
+      ],
+      "technologies": [
+        "Next.js 16",
+        "React 19",
+        "Tailwind CSS 4",
+        "GSAP",
+        "Lenis",
+        "Framer Motion"
+      ],
+      "website": "https://base-theme.zylosync.app",
+      "thumbnail": "",
+      "about": "The authoritative base theme for the ZyloSync commerce ecosystem. It provides a modular, highly extensible foundation for building premium e-commerce storefronts with a focus on fluid motion, sub-second performance, and modern aesthetics.",
+      "goal": "To establish a 'gold standard' for storefront performance and interactivity, utilizing the latest web technologies.",
+      "execution": "Built with the Next.js 16 canary/bleeding-edge versions and Tailwind CSS 4. Integrated GSAP and Lenis for smooth inertial scrolling and complex UI entrance sequences. Designed with a modular component architecture for easy merchant customization.",
+      "results": "Achieved 100/100 Lighthouse scores while maintaining rich animations and complex dynamic layouts.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-05-02T15:00:00Z",
+      "updatedAt": "2026-05-05T12:00:00Z",
+      "tags": [
+        {
+          "id": "t-ecommerce",
+          "name": "E-commerce"
+        },
+        {
+          "id": "t-nextjs",
+          "name": "Next.js"
+        },
+        {
+          "id": "t-ux",
+          "name": "UX/UI"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-hisabi-001",
+      "slug": "hisabi-mern-pos",
+      "title": "Hisabi - Smart POS",
+      "subtitle": "Modular MERN-Stack Point of Sale System",
+      "client": "Retail Businesses",
+      "logo": "",
+      "services": [
+        "Full-Stack Development",
+        "Inventory Management Logic",
+        "Financial Reporting"
+      ],
+      "technologies": [
+        "MongoDB",
+        "Express.js",
+        "React",
+        "Node.js",
+        "Redux",
+        "Tailwind CSS"
+      ],
+      "website": "",
+      "thumbnail": "",
+      "about": "Hisabi is a high-performance POS system designed for small to medium enterprises. It features a sophisticated inventory tracking system, multi-role authentication, and real-time sales analytics using Chart.js/ApexCharts.",
+      "goal": "To provide a lightweight yet powerful alternative to bloated enterprise POS solutions with focus on speed and data integrity.",
+      "execution": "Built with a clean MERN architecture, utilizing MongoDB transactions for financial accuracy and a responsive React frontend for high-speed operation on tablets and desktops.",
+      "results": "Delivered a production-ready system with comprehensive reporting modules (Sales, Purchase, Stock) and seamless integration with SMS/WhatsApp APIs for customer notifications.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-04-15T10:00:00Z",
+      "updatedAt": "2026-04-15T10:00:00Z",
+      "tags": [
+        {
+          "id": "t-mern",
+          "name": "MERN"
+        },
+        {
+          "id": "t-pos",
+          "name": "POS"
+        },
+        {
+          "id": "t-fintech",
+          "name": "FinTech"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-attire-001",
+      "slug": "attireidyll-ecommerce",
+      "title": "attireIdyll - Lifestyle Commerce",
+      "subtitle": "Premium Next.js E-commerce Experience",
+      "client": "Fashion Brands",
+      "logo": "",
+      "services": [
+        "E-commerce Frontend Development",
+        "Payment Gateway Integration",
+        "State Management"
+      ],
+      "technologies": [
+        "Next.js 15",
+        "React 19",
+        "TypeScript",
+        "Redux Toolkit",
+        "Tailwind CSS",
+        "Framer Motion"
+      ],
+      "website": "https://attireidyll.com",
+      "thumbnail": "",
+      "about": "A modern, high-conversion e-commerce platform built for the fashion industry. It features dynamic product listings, persistent shopping carts, and a smooth checkout flow integrated with bKash and SSLCommerz.",
+      "goal": "To build a mobile-first, high-performance storefront that maximizes user retention through fluid animations and sub-second page loads.",
+      "execution": "Leveraged Next.js 15 App Router with Turbopack for lightning-fast development. Implemented complex state persistence with Redux Toolkit and smooth UI transitions using Framer Motion.",
+      "results": "Achieved a premium shopping experience with integrated flash deals, campaign modules, and automated delivery tracking.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-05-01T09:00:00Z",
+      "updatedAt": "2026-05-01T09:00:00Z",
+      "tags": [
+        {
+          "id": "t-ecommerce",
+          "name": "E-commerce"
+        },
+        {
+          "id": "t-nextjs",
+          "name": "Next.js"
+        },
+        {
+          "id": "t-premium",
+          "name": "Premium"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-emegadeal-001",
+      "slug": "emegadeal",
+      "title": "eMegaDeal - Premium E-commerce",
+      "subtitle": "High-Conversion Lifestyle Store",
+      "client": "E-commerce Startup",
+      "logo": "",
+      "services": [
+        "E-commerce Engineering",
+        "Conversion Rate Optimization",
+        "Global Search Architecture"
+      ],
+      "technologies": [
+        "Next.js 15",
+        "React 19",
+        "TypeScript",
+        "Tailwind CSS",
+        "Prisma"
+      ],
+      "website": "https://emegadeal.com",
+      "thumbnail": "",
+      "about": "eMegaDeal is a sophisticated e-commerce platform designed for high-conversion lifestyle retail. It features a highly optimized search engine, dynamic product categorization, and a fluid user experience tailored for modern digital shopping.",
+      "goal": "To build a robust, scalable e-commerce storefront that handles high traffic volumes and complex product catalogs with sub-second response times.",
+      "execution": "Leveraged Next.js 15 for server-side rendering and static site generation of product pages. Implemented complex filtering logic and a performance-optimized database schema using Prisma.",
+      "results": "Delivered a feature-rich storefront with integrated payment gateways, automated stock management, and a premium mobile-first interface.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-04-01T10:00:00Z",
+      "updatedAt": "2026-04-01T10:00:00Z",
+      "tags": [
+        {
+          "id": "t-ecommerce",
+          "name": "E-commerce"
+        },
+        {
+          "id": "t-nextjs",
+          "name": "Next.js"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "project-bashrunner-001",
+      "slug": "bash-runner-orchestration",
+      "title": "Bash Runner - DevOps Orchestrator",
+      "subtitle": "Hybrid WebSocket & REST CLI Execution Engine",
+      "client": "ExpressITLab Internal",
+      "logo": "",
+      "services": [
+        "DevOps Automation",
+        "API Architecture",
+        "System Security Analysis"
+      ],
+      "technologies": [
+        "Node.js",
+        "WebSocket",
+        "Prisma",
+        "Docker",
+        "Shell Scripting"
+      ],
+      "website": "",
+      "thumbnail": "",
+      "about": "A specialized orchestration engine designed to securely execute remote shell commands and deployment scripts. It features a hybrid WebSocket/REST interface for real-time command feedback and a web-based terminal UI.",
+      "goal": "To automate complex multi-stage deployments while maintaining strict security auditing and real-time observability.",
+      "execution": "Built a secure Node.js middleware that bridges web interfaces with system-level execution. Implemented robust API-key authentication and Docker container management modules.",
+      "results": "Streamlined the deployment pipeline for 20+ micro-projects, providing a centralized control plane for infrastructure management.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-05-04T15:00:00Z",
+      "updatedAt": "2026-05-04T15:00:00Z",
+      "tags": [
+        {
+          "id": "t-devops",
+          "name": "DevOps"
+        },
+        {
+          "id": "t-automation",
+          "name": "Automation"
+        },
+        {
+          "id": "t-security",
+          "name": "Security"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-font-cdn-001",
+      "slug": "font-cdn",
+      "title": "ExpressIT Font CDN",
+      "subtitle": "High-Performance Custom Font Delivery System",
+      "client": "Internal / Web Developers",
+      "logo": "",
+      "services": [
+        "CDN Architecture",
+        "Dynamic CSS Generation",
+        "Asset Optimization"
+      ],
+      "technologies": [
+        "JavaScript",
+        "GitHub Pages",
+        "CSS",
+        "Woff2/Woff"
+      ],
+      "website": "https://shifaul-expressitbd.github.io/font-cdn",
+      "thumbnail": "",
+      "about": "A specialized Content Delivery Network designed for serving custom and premium typography. It features a dynamic API that generates optimized @font-face CSS on the fly, reducing font loading latency for client applications.",
+      "goal": "To centralize and optimize font assets across multiple web properties while maintaining low TTFB and high cache hit rates.",
+      "execution": "Developed a custom font indexing script and a lightweight JavaScript API for dynamic CSS delivery. Leveraged GitHub Pages for high-availability hosting and Woff2 compression for minimum payload sizes.",
+      "results": "Successfully streamlined typography management for over 10+ active web projects, providing a consistent and fast font-loading experience.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-03-01T12:00:00Z",
+      "updatedAt": "2026-03-01T12:00:00Z",
+      "tags": [
+        {
+          "id": "t-infrastructure",
+          "name": "Infrastructure"
+        },
+        {
+          "id": "t-cdn",
+          "name": "CDN"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "project-sip-001",
+      "slug": "sip-voice-gateway",
+      "title": "SrcRoot SIP Gateway",
+      "subtitle": "High-Availability VoIP & Media Orchestration",
+      "client": "Telecom Operators",
+      "logo": "",
+      "services": [
+        "VoIP Architecture",
+        "Media Proxying",
+        "SIP Protocol Handling"
+      ],
+      "technologies": [
+        "NestJS",
+        "Drachtio",
+        "RTPEngine",
+        "SIP",
+        "Docker"
+      ],
+      "website": "",
+      "thumbnail": "",
+      "about": "A carrier-grade SIP gateway designed for handling large-scale VoIP traffic. It integrates Drachtio for SIP signaling and RTPEngine for media proxying, providing a robust bridge between disparate telecom networks.",
+      "goal": "To build a programmable, scalable voice infrastructure that can handle thousands of concurrent calls with sub-millisecond signaling latency.",
+      "execution": "Developed a custom NestJS gateway using the Drachtio framework. Implemented advanced media handling via RTPEngine, including transcoding and secure RTP (SRTP) termination.",
+      "results": "Successfully deployed as a core component for a distributed PBX system, supporting high-fidelity voice calls and complex call routing logic.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2025-11-20T12:00:00Z",
+      "updatedAt": "2025-11-20T12:00:00Z",
+      "tags": [
+        {
+          "id": "t-telecom",
+          "name": "Telecom"
+        },
+        {
+          "id": "t-voip",
+          "name": "VoIP"
+        },
+        {
+          "id": "t-backend",
+          "name": "Backend"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "project-commute-001",
+      "slug": "srcroot-commute",
+      "title": "SrcRoot Commute",
+      "subtitle": "Intelligent Transport & Routing Platform",
+      "client": "Logistics & Transport",
+      "logo": "",
+      "services": [
+        "Real-time Tracking",
+        "Routing Optimization",
+        "Mobile-First UI"
+      ],
+      "technologies": [
+        "Next.js",
+        "Google Maps API",
+        "Socket.io",
+        "Node.js"
+      ],
+      "website": "https://commute.shifaul.dev",
+      "thumbnail": "/images/projects/commute/thumbnail.png",
+      "about": "A modern commute management platform that streamlines daily transport logistics. It features real-time vehicle tracking, optimized route planning, and an integrated communication bridge.",
+      "goal": "To reduce urban commute friction through data-driven route optimization and real-time observability.",
+      "execution": "Built with Next.js for the frontend and a WebSocket-driven backend for real-time location updates. Integrated Google Maps SDK for advanced geofencing and distance matrix calculations.",
+      "results": "Delivered a high-performance platform capable of managing multiple fleet operators with centralized dashboarding.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-03-15T09:00:00Z",
+      "updatedAt": "2026-03-15T09:00:00Z",
+      "tags": [
+        {
+          "id": "t-logistics",
+          "name": "Logistics"
+        },
+        {
+          "id": "t-realtime",
+          "name": "Real-time"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "project-pdf-001",
+      "slug": "pdf-generation-microservice",
+      "title": "PDF Engine Service",
+      "subtitle": "High-Throughput HTML-to-PDF Microservice",
+      "client": "Internal Tools",
+      "logo": "",
+      "services": [
+        "Microservice Architecture",
+        "Document Processing",
+        "Worker Queues"
+      ],
+      "technologies": [
+        "Node.js",
+        "Puppeteer",
+        "BullMQ",
+        "Redis",
+        "Docker"
+      ],
+      "website": "",
+      "thumbnail": "",
+      "about": "A dedicated microservice for generating complex PDF documents from dynamic HTML templates. It uses headless browser rendering for maximum visual fidelity and a robust queue system for handling high-volume bursts.",
+      "goal": "To offload resource-intensive document generation from core application servers.",
+      "execution": "Implemented using Puppeteer for rendering and BullMQ/Redis for job management. Designed with a clean API interface for easy integration with any upstream service.",
+      "results": "Achieved sub-second document generation for standard invoices and reports, with full support for custom CSS and high-resolution imagery.",
+      "goalImages": [],
+      "resultImages": [],
+      "published": true,
+      "createdAt": "2026-01-10T14:00:00Z",
+      "updatedAt": "2026-01-10T14:00:00Z",
+      "tags": [
+        {
+          "id": "t-microservice",
+          "name": "Microservice"
+        },
+        {
+          "id": "t-automation",
+          "name": "Automation"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 25,
+    "totalPages": 3
+  }
+}

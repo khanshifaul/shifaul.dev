@@ -1,0 +1,21 @@
+# Directives applying to all crawlers (*)
+User-agent: *
+# Allow access to the entire site
+Allow: /
+# Disallow access to common administrative areas and sensitive files
+Disallow: /wp-admin/
+Disallow: /admin/
+Disallow: /login/
+Disallow: /register/
+Disallow: /sign-in/
+Disallow: /sign-up/
+Disallow: /forget-password/
+Disallow: /email-verify/
+Disallow: /cgi-bin/
+Disallow: /temp/
+Disallow: /*?
+Disallow: /*.tmp$
+Disallow: /*.bak$
+
+# Specify the location of the sitemap(s) for crawlers
+Sitemap: https://www.shifaul.dev/sitemap.xml

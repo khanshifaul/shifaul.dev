@@ -1,0 +1,15 @@
+@layer components {
+    .triangle {
+        clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
+    }
+}
+
+@font-face {
+    font-family: "DancingScript";
+    src: url("../public/fonts/DancingScript.woff");
+}
+
+@font-face {
+    font-family: "AmadeusAP";
+    src: url("../public/fonts/AmadeusAP.woff");
+}

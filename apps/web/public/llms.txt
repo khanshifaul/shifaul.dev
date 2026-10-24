@@ -1,0 +1,19 @@
+# Shifaul Islam
+
+> Portfolio of Shifaul Islam, a full-stack developer building web applications with Next.js, NestJS, and TypeScript.
+
+The site presents Shifaul's background, selected software projects, technical writing, and contact information.
+
+## Main pages
+- [Home](https://www.shifaul.dev/): Portfolio homepage.
+- [About](https://www.shifaul.dev/about): Background, skills, education, and experience.
+- [Portfolio](https://www.shifaul.dev/portfolio): Software and technology projects.
+- [Blog](https://www.shifaul.dev/blog): Articles and technical writing.
+- [Contact](https://www.shifaul.dev/contact): Contact and collaboration inquiries.
+- [Resume](https://www.shifaul.dev/resume): Publicly viewable resume.
+
+## Contact
+- Email: [connect@shifaul.dev](mailto:connect@shifaul.dev)
+- GitHub: [khanshifaul](https://github.com/khanshifaul)
+
+Only publicly available pages are intended as references. Administrative, authentication, and user-submitted content are not public reference material.

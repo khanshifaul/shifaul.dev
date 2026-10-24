@@ -1,0 +1,8 @@
+{
+  "version": "0.0.65",
+  "theme": "green",
+  "paths": {
+    "components": "components/ui",
+    "utils": "lib/utils.ts"
+  }
+}

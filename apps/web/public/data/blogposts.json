@@ -1,0 +1,367 @@
+{
+  "success": true,
+  "message": "Published blog posts retrieved successfully (LOCAL_VAULT_FALLBACK)",
+  "data": [
+    {
+      "id": "cm_cq_001",
+      "title": "The Architecture of Scale: Lessons from Building CalQuick's Commerce Engine",
+      "slug": "the_architecture_of_scale_lessons_from_building_calquicks_commerce_engine",
+      "thumbnail": "/images/blog/calquick-engine.png",
+      "content": "Building a commerce platform like **CalQuick** isn't just about 'adding to cart'. It's about orchestrating a complex dance of inventory, taxes, global payments, and real-time analytics across a distributed system. When we designed the CalQuick commerce engine, we weren't just building a store—we were building a high-fidelity transaction orchestrator.\n\n## 1. Solving the Concurrency Nightmare\n\nIn high-traffic scenarios (like a limited Eid campaign), hundreds of users might try to purchase the last 5 items simultaneously. A traditional 'check then update' logic leads to **race conditions** and overselling.\n\nWe implemented a **distributed locking mechanism** using Redis. Every checkout intent initiates a 10-minute 'Inventory Lock'. If the payment isn't confirmed within that window, the lock expires and the inventory is automatically returned to the pool using a TTL-based cleanup worker.\n\n## 2. Event-Driven Reliability with BullMQ\n\nWe moved away from synchronous processing for anything that isn't mission-critical for the initial response. Our commerce engine is now fully event-driven:\n\n- **Order Service**: Emits an `order.created` event.\n- **Tax Service**: Listens for the event and calculates regional VAT/GST in the background.\n- **Inventory Service**: Decrements stock levels.\n- **Notification Service**: Queues an email/SMS for the customer.\n\nBy using **BullMQ** (powered by Redis), we ensure that if the Tax Service is down, the events are queued and retried automatically once the service is healthy again. This makes the system 'self-healing'.\n\n## 3. Type-Safe Commerce with Prisma\n\nCommerce data is sensitive. A typo in a currency field or a missing relation can crash the billing pipeline. We leverage **Prisma** to define strict schemas that represent our business entities.\n\n```typescript\n// Example of our strict commerce schema\nmodel Transaction {\n  id            String   @id @default(cuid())\n  amount        Decimal  @db.Decimal(12, 2)\n  currency      Currency @default(USD)\n  status        Status   @default(PENDING)\n  orderId       String   @unique\n  metadata      Json?\n  createdAt     DateTime @default(now())\n}\n```\n\nBy using the `Decimal` type instead of floating-point numbers, we eliminate the rounding errors that plague financial software.\n\n## 4. Performance: The 'Zero-Latency' Dashboard\n\nFor a merchant, a slow dashboard means lost productivity. We built the CalQuick dashboard using **Next.js Server Components**. We fetch data at the edge and use a hybrid caching strategy:\n1. **Static Content**: Cached for minutes.\n2. **Financial Data**: Fetched fresh every time but wrapped in a fast `Suspense` boundary.\n3. **Real-time Analytics**: Streamed over WebSockets directly to the client-side state.\n\n---\n\n*Scaling isn't just about throwing more servers at the problem; it's about building an architecture that respects the gravity of every transaction.*",
+      "reactions": 0,
+      "views": 0,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2026-05-07T06:20:00.000Z",
+      "updatedAt": "2026-05-07T06:20:00.000Z",
+      "tags": [
+        { "id": "t-architecture", "name": "Architecture" },
+        { "id": "t-nextjs", "name": "Next.js" },
+        { "id": "t-commerce", "name": "Commerce" }
+      ],
+      "_count": { "tags": 3 }
+    },
+    {
+      "id": "cm_hw_001",
+      "title": "Beyond the Screen: Bridging Real-World Hardware with High-Level Web APIs",
+      "slug": "beyond_the_screen_bridging_real_world_hardware_with_high_level_web_apis",
+      "thumbnail": "/images/blog/hardware-bridge.png",
+      "content": "Most web developers live in the comfortable world of browser events and HTTP responses. But when your 'input' is a physical RFID card and your 'output' is an industrial magnetic door lock, you enter the world of **Hard-Real-Time constraints**.\n\nBridging the gap between **ESP32 microcontrollers** and **Node.js Cloud APIs** requires a architecture that accounts for network jitter, power loss, and physical signal interference.\n\n## 1. The 'Heartbeat' Pattern & Graceful Degradation\n\nHardware is inherently unreliable. To prevent system-wide failure when a device goes offline, we implemented a robust 'Heartbeat' system. Every device sends a 1KB ping every 30 seconds. If the cloud misses three pings:\n- The device is flagged as 'UNREACHABLE' in the dashboard.\n- The device itself shifts into **'Offline-First Mode'**, where it uses a local SQLite (or SPIFFS-based) cache of authorized users to maintain operations without an internet connection.\n\n## 2. Why We Switched from JSON to Protobufs\n\nOn an ESP32, RAM is measured in kilobytes. A standard JSON object with many fields can easily fragment the heap. We moved to **Protocol Buffers (Protobufs)** for all device-to-cloud communication.\n\n```proto\n// Our optimized attendance message\nmessage ScanData {\n  string device_id = 1;\n  string rfid_tag = 2;\n  uint64 timestamp = 3;\n  bool is_offline = 4;\n}\n```\n\nBy sending binary-encoded data instead of text-based strings, we reduced our payload size by **65%** and significantly lowered the CPU overhead for serialization/deserialization.\n\n## 3. The 'Double-Buffer' OTA Strategy\n\nUpdating firmware in the field is risky. A power cut during a flash can brick a device. We use a **Double-Buffer Update Strategy**:\n1. The device downloads the new binary to a secondary flash partition.\n2. It verifies the checksum and signature.\n3. It sets a 'boot flag' to the new partition and reboots.\n4. If the new firmware fails to boot (Watchdog timer reset), the bootloader automatically reverts to the previous stable partition.\n\n## 4. Handling Physical Interference\n\nIn industrial environments, electrical noise from motors or fluorescent lights can cause false triggers. We implemented **Software Debouncing** and **Median Filtering** on our sensor inputs to ensure that only clear, valid signals reach our business logic.\n\n---\n\n*The Internet of Things is a bridge between bits and atoms. To build it well, you must respect the physics of the physical world as much as the logic of the digital one.*",
+      "reactions": 0,
+      "views": 0,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2026-05-07T06:15:00.000Z",
+      "updatedAt": "2026-05-07T06:15:00.000Z",
+      "tags": [
+        { "id": "t-iot", "name": "IoT" },
+        { "id": "t-hardware", "name": "Hardware" },
+        { "id": "t-embedded", "name": "Embedded" }
+      ],
+      "_count": { "tags": 3 }
+    },
+    {
+      "id": "cm_ds_001",
+      "title": "Design as Code: Why We Built a Custom UI Library Instead of Using Components Off-the-Shelf",
+      "slug": "design_as_code_why_we_built_a_custom_ui_library_instead_of_using_components_off_the_shelf",
+      "thumbnail": "/images/blog/design-system-philosophy.png",
+      "content": "With libraries like Shadcn/ui and MUI dominating the React ecosystem, building a custom UI library from scratch feels like reinventing the wheel. But for the **SrcRoot ecosystem**, off-the-shelf wasn't enough. We needed a design system that wasn't just a collection of components, but a unified language for our developers.\n\nEnter **@srcroot/ui**: a system built on the philosophy of **Deep Polymorphism**.\n\n## 1. The 'AsChild' Revolution\n\nTraditional React components often trap you inside their own DOM structure. A `<Button>` is always a `<button>`. What if you want that button to be a Next.js `<Link>`? You'd usually have to wrap it, leading to double-rendering and CSS issues.\n\nBy utilizing **Radix UI's Slot primitive**, @srcroot components are fully polymorphic. \n\n```tsx\n<Button asChild variant=\"ghost\">\n  <Link href=\"/dashboard\">\n    Go to Dashboard\n  </Link>\n</Button>\n```\n\nThe `Button` doesn't render its own tag; it merges its styles and behaviors into the `Link` component. This keeps our DOM tree clean and our SEO teams happy.\n\n## 2. Scaling with Class Variance Authority (CVA)\n\nMapping design tokens to CSS classes is where most systems get messy. We use **CVA** to define our component variants in a type-safe, declarative way. This eliminates 'class-soup' and ensures that every 'Primary' button across ten different projects looks exactly the same.\n\n```typescript\nconst buttonVariants = cva(\n  \"inline-flex items-center justify-center ...\",\n  {\n    variants: {\n      variant: {\n        default: \"bg-primary text-primary-foreground hover:bg-primary/90\",\n        outline: \"border border-input hover:bg-accent\",\n      },\n      size: {\n        default: \"h-10 py-2 px-4\",\n        sm: \"h-9 px-3\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n      size: \"default\",\n    },\n  }\n)\n```\n\n## 3. Accessibility as a Constraint, Not a Feature\n\nWe didn't 'add' accessibility to @srcroot/ui; we built it on top of accessibility. By using **Radix UI** primitives as our foundation, we inherited world-class focus management, keyboard navigation, and ARIA attributes out of the box. \n\nThis 'Invisible UI' philosophy ensures that our applications work for everyone, regardless of how they interact with the screen.\n\n## 4. The 'Copy-and-Paste' Ecosystem\n\nFollowing the 'shadcn' model, our library isn't a bloated NPM package. It's a collection of high-quality source files that you copy into your project. This gives developers **Full Ownership**. If a project needs a specific tweak to a Modal's animation, they can change the code directly without waiting for a library update.\n\n---\n\n*A design system isn't a UI kit; it's a contract between design and engineering.*",
+      "reactions": 0,
+      "views": 0,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2026-05-07T06:10:00.000Z",
+      "updatedAt": "2026-05-07T06:10:00.000Z",
+      "tags": [
+        { "id": "t-design", "name": "Design Systems" },
+        { "id": "t-uiux", "name": "UI/UX" },
+        { "id": "t-react", "name": "React" }
+      ],
+      "_count": { "tags": 3 }
+    },
+    {
+      "id": "cm_iot_001",
+      "title": "Hardware to Cloud: Architecting a Real-Time IoT Attendance System",
+      "slug": "hardware_to_cloud_architecting_a_real_time_iot_attendance_system",
+      "thumbnail": "/images/blog/iot-attendance-cloud.png",
+      "content": "Scaling a software application is a well-understood challenge. But scaling a system that bridges physical hardware with cloud infrastructure introduces a unique set of constraints: power stability, network jitter, and the ever-present risk of \"offline\" operation.\n\nWhen we built the **IoT Attendance System**, the goal wasn't just to record \"check-ins.\" It was to create a robust, enterprise-grade appliance that remains reliable even when the world around it isn't.\n\n## The Edge: ESP32 Firmware Architecture\n\nAt the heart of the device is an **ESP32**, a powerful dual-core microcontroller with integrated Wi-Fi. However, \"integrated Wi-Fi\" doesn't mean \"always connected.\"\n\nI designed the firmware with a **State-Machine Architecture** to handle connectivity gracefully:\n1.  **Phase A (AP Mode)**: If no Wi-Fi is found, the device becomes a Wi-Fi hotspot with a captive portal, allowing users to configure network settings from their phones.\n2.  **Phase B (Web Setup)**: Once connected, a secure local web interface handles device registration and admin credentials.\n3.  **Normal Operation**: The device switches to a low-power polling mode, monitoring RFID and Biometric (Fingerprint) sensors.\n\n## Solving the \"Offline\" Dilemma\n\nIn many parts of the world, internet stability is a luxury. If the cloud is unreachable, the attendance system must still work.\n\nWe implemented a **Local-First Persistence Model**:\n-   **SD Card Logging**: Every scan is immediately written to a local `scans.log` file on an SD card with a valid NTP timestamp.\n-   **Sync-Back Logic**: When the Wi-Fi connection is restored, a background process (using FreeRTOS semaphores) batches and pushes these offline scans to the cloud API.\n-   **Local User Cache**: The device periodically downloads a \"known users\" list. This allows the OLED display to show a person's name (e.g., \"Welcome, Shifaul!\") even during an internet outage.\n\n## Cloud Integration: Secure & Scalable\n\nThe firmware communicates with a Node.js/Express backend through a secure REST API. To ensure security at the edge:\n-   **MAC-Based Auth**: Initial registration uses the device's unique MAC address.\n-   **JWT Bearer Tokens**: Once registered, the device uses a persistent access token for all scan data.\n-   **Remote Commands**: The cloud can push commands (REBOOT, FACTORY_RESET, UPDATE_CACHE) to the device via the response body of standard polling requests, creating a lightweight \"push\" mechanism without the overhead of MQTT.\n\n## Hardware Diagnostics\n\nTo prevent field failures, I included a **Hardware Diagnostic Summary** on boot. The system checks the electrical state of all SPI pins (RFID, SD Card) and DHT sensors, logging brownout reasons or watchdog resets to the serial console.\n\n```cpp\nSerial.println(\"REBOOT REASON: \");\nesp_reset_reason_t reason = esp_reset_reason();\nswitch (reason) {\n    case ESP_RST_BROWNOUT: Serial.println(\"BROWNOUT (Power Issue)\"); break;\n    case ESP_RST_TASK_WDT: Serial.println(\"Watchdog (Task Hang)\"); break;\n    // ...\n}\n```\n\n## Conclusion\n\nThe IoT Attendance System is a bridge between the physical and digital worlds. By prioritizing local persistence and designing for failure at the edge, we've built a system that is more than the sum of its parts. It's a reliable enterprise appliance that proves IoT can be as stable as any \"traditional\" software stack.\n\nInnovation happens at the intersection of bits and atoms.\n\n---\n\n*Want to dive deeper into the firmware? Check out the [IoT Attendance project details](/portfolio/iot-attendance-system).*",
+      "reactions": 0,
+      "views": 0,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2026-05-05T13:20:00.000Z",
+      "updatedAt": "2026-05-05T13:20:00.000Z",
+      "tags": [
+        {
+          "id": "t-iot",
+          "name": "IoT"
+        },
+        {
+          "id": "t-esp32",
+          "name": "ESP32"
+        },
+        {
+          "id": "t-cloud",
+          "name": "Cloud Architecture"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "cm_cx_001",
+      "title": "Rust on the Desktop: Building a Native GNOME Wayland Clipboard Manager",
+      "slug": "rust_on_the_desktop_building_a_native_gnome_wayland_clipboard_manager",
+      "thumbnail": "/images/blog/clipx-rust-wayland.png",
+      "content": "In the modern Linux landscape, Wayland has become the standard. While it brings significant security and performance improvements, it also introduces challenges for traditional desktop utilities like clipboard managers. Tools that used to rely on X11's relatively \"loose\" security model now find themselves blocked by Wayland's strict isolation between windows.\n\nWhen I set out to build **ClipX**, the goal was simple: create a clipboard manager that feels like a native part of the GNOME desktop—fast, secure, and completely out of the way.\n\n## Why Rust?\n\nSystem-level utilities demand two things: **minimal resource footprint** and **absolute reliability**. A clipboard manager that crashes or leaks memory is worse than no manager at all.\n\nRust was the natural choice. By utilizing its ownership model, we ensure that:\n1.  **Memory Safety**: Zero segmentation faults or buffer overflows while processing clipboard data.\n2.  **Concurrency without Fear**: The background daemon and the UI can interact with the same history file without race conditions.\n3.  **Static Binaries**: Deployment is as simple as moving a single binary file.\n\n## The Dual-Engine Architecture\n\nOne of the biggest hurdles in building ClipX was **Auto-Paste**. Under Wayland, one application cannot programmatically \"inject\" keystrokes into another for security reasons.\n\nTo solve this, I implemented a **Dual-Engine Simulation** approach:\n-   **Primary (Wayland)**: We use `ydotool`, which interacts with the kernel's `uinput` device to simulate a *hardware level* keyboard. This bypasses compositor-level restrictions.\n-   **Fallback (X11)**: For legacy sessions, we gracefully fallback to `xdotool`.\n\n## Designing for \"Stealth\"\n\nA great utility shouldn't have a visible presence until it's needed. ClipX eschews dock icons and traditional windows in favor of a **Glassmorphic HUD (Heads-Up Display)**.\n\nUsing GTK3 with custom CSS, I implemented a design system based on the **Tokyo Night** color palette.\n-   **Blurred Backgrounds**: Creating a sense of depth and hierarchy.\n-   **Fuzzy Search**: A custom filtering algorithm that allows users to find old snippets in milliseconds.\n-   **Sync-Aware Persistence**: The background daemon polls the clipboard every 500ms, but it's \"Sync-Aware\"—it reloads the history from disk before every write to ensure that manual deletions in the UI aren't overwritten.\n\n## Engineering for Performance\n\nClipX is built to be \"Zero-Cost\" when idle. The daemon spends most of its life sleeping, waking up only briefly to check for clipboard changes. The UI is only launched on demand (via a `Super+V` shortcut), ensuring that system resources are reserved for your actual work.\n\n```rust\n// A glimpse into the Sync-Aware persistence logic\nfn save_history(new_entry: String) -> Result<()> {\n    let mut history = load_history_from_disk()?; // Reload to ensure sync\n    if !history.contains(&new_entry) {\n        history.insert(0, new_entry);\n        history.truncate(50); // Keep it lean\n        write_to_disk(&history)?;\n    }\n    Ok(())\n}\n```\n\n## Conclusion\n\nBuilding ClipX taught me that \"native feel\" isn't just about the UI—it's about how the software respects the user's system and workflow. By leveraging Rust's performance and navigating the complexities of Wayland security, we've created a tool that feels like a native feature of the OS rather than a third-party add-on.\n\nThe best tools are the ones that make you forget they are even there.\n\n---\n\n*Ready to try a faster workflow? Explore the [ClipX project source](/portfolio/oxidized-clip) or install it via the provided Makefile.*",
+      "reactions": 0,
+      "views": 0,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2026-05-05T13:15:00.000Z",
+      "updatedAt": "2026-05-05T13:15:00.000Z",
+      "tags": [
+        {
+          "id": "t-rust",
+          "name": "Rust"
+        },
+        {
+          "id": "t-wayland",
+          "name": "Wayland"
+        },
+        {
+          "id": "t-gnome",
+          "name": "GNOME"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "cm_fc_001",
+      "title": "The Stealth CDN: Optimizing Typography Delivery for 10+ Web Properties",
+      "slug": "the_stealth_cdn_optimizing_typography_delivery_for_10_plus_web_properties",
+      "thumbnail": "/images/blog/font-cdn-stealth.png",
+      "content": "In the race for a 100/100 Lighthouse score, typography is often the silent killer. Google Fonts is great, but every external DNS lookup and TLS handshake adds milliseconds to your First Contentful Paint (FCP). When managing over 10 different web properties across the SrcRoot and ExpressITLab ecosystems, I realized we needed something faster, more reliable, and completely under our control.\n\nEnter the **ExpressIT Font CDN**: a lightweight, self-hosted typography infrastructure built on top of GitHub Pages and optimized for sub-second delivery.\n\n## Why Build a Custom CDN?\n\nThe decision to move away from public font providers was driven by three key factors:\n1.  **Reduced Latency**: Eliminating third-party DNS negotiation by serving fonts from a unified, high-availability origin.\n2.  **Modern Formats Only**: We only serve **Woff2** (with Woff fallbacks), ensuring the smallest possible file sizes for modern browsers.\n3.  **Strict Cache Control**: By controlling the origin, we can enforce aggressive caching policies that keep fonts on the user's device for months.\n\n## Automated CSS Generation\n\nManually writing `@font-face` declarations for dozens of custom brand fonts is error-prone. I built a simple Node.js automation script (`generate-css.js`) that transforms a JSON configuration into a production-ready CSS file.\n\n```javascript\nconst fonts = {\n  'Airstrip': { file: 'airstrip', weights: [400], display: 'swap' },\n  'Autography': { file: 'autography', weights: [400], display: 'swap' },\n  // ... more fonts\n};\n\nlet cssOutput = '';\nObject.entries(fonts).forEach(([name, config]) => {\n  cssOutput += `\n@font-face {\n  font-family: '${name}';\n  src: url('https://cdn.shifaul.dev/fonts/${config.file}.woff2') format('woff2');\n  font-weight: ${config.weight};\n  font-display: swap;\n}\\n`;\n});\n```\n\nThis ensures that every property—from our retail POS interfaces to our design system documentation—uses identical, optimized font declarations.\n\n## Leveraging GitHub Pages as Infrastructure\n\nInstead of spinning up a dedicated server, I used **GitHub Pages** as the delivery vehicle.\n-   **Global Edge Cache**: GitHub uses Fastly's global CDN network, putting our fonts physically closer to users worldwide.\n-   **Zero Cost/Zero Maintenance**: The infrastructure is handled by GitHub, allowing us to focus on asset optimization rather than server uptime.\n-   **Versioned Deployments**: Updates to the font library are tracked via Git, providing an audit trail of every change.\n\n## Performance Gains\n\nThe impact was immediate. By switching to the Stealth CDN, we observed:\n-   **~150ms reduction** in FCP (First Contentful Paint) across our properties.\n-   **Zero Layout Shift (CLS)** by utilizing `font-display: swap` and pre-calculated font metrics.\n-   **Reduced Data Transfer**: Woff2 compression reduced our total font payload by over **30%** compared to standard TTF delivery.\n\n## Conclusion\n\nSometimes the best infrastructure is the one you don't notice. The Stealth CDN isn't flashy, but it's a critical component of our commitment to performance. By taking control of our typography delivery, we've ensured that our brand identity remains consistent and our applications remain lightning-fast.\n\nEfficiency isn't about doing more—it's about removing everything that doesn't need to be there.\n\n---\n\n*Curious about the technical specs? View the [Font CDN project page](/portfolio/expressit-font-cdn) for more details.*",
+      "reactions": 0,
+      "views": 0,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2026-05-05T13:10:00.000Z",
+      "updatedAt": "2026-05-05T13:10:00.000Z",
+      "tags": [
+        {
+          "id": "t-performance",
+          "name": "Performance"
+        },
+        {
+          "id": "t-infrastructure",
+          "name": "Infrastructure"
+        },
+        {
+          "id": "t-typography",
+          "name": "Typography"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "cm_br_001",
+      "title": "Secure Orchestration: Bridging the Browser and the Shell with Bash Runner",
+      "slug": "secure_orchestration_bridging_the_browser_and_the_shell_with_bash_runner",
+      "thumbnail": "/images/blog/bash-runner-orchestration.png",
+      "content": "In the world of DevOps, the distance between a web dashboard and the terminal can feel like a chasm. Often, we find ourselves manually SSH-ing into servers to trigger deployment scripts, restart services, or check container health. **Bash Runner** was born out of a desire to bridge this gap—securely, efficiently, and in real-time.\n\nBash Runner is a hybrid orchestration engine that allows you to execute remote shell commands and deployment scripts through a secure web interface.\n\n## The Hybrid Challenge: REST vs. WebSockets\n\nWhen building an orchestration tool, you face a dilemma. **REST** is great for simple, \"set-and-forget\" commands. You send a request, the server executes, and you get a response. However, for long-running scripts (like building a Docker image), a standard HTTP request might timeout, and you lose visibility into the progress.\n\n**WebSockets** provide the real-time stream we need, but they are often more complex to implement for simple integrations.\n\nIn Bash Runner, I implemented a **Hybrid Endpoint architecture**. A single interface handles both:\n1.  **Direct HTTP Requests**: For quick triggers like `restart-nginx`.\n2.  **Persistent WebSocket Connections**: For streaming stdout/stderr of long-running deployment pipelines directly to a web-based terminal.\n\n## Architecture: The Command Registry\n\nSecurity is paramount when you're exposing a shell to the web. You can't just allow a user to run `rm -rf /`.\n\nBash Runner uses a **Strict Command Registry** system. Every executable command must be pre-defined in a configuration file. The web API only accepts `commandId`s, never raw shell strings.\n\n```json\n{\n  \"commands\": {\n    \"deploy-frontend\": {\n      \"script\": \"./scripts/deploy.sh\",\n      \"cwd\": \"/var/www/my-app\",\n      \"timeout\": 300000,\n      \"requiresSudo\": true\n    }\n  }\n}\n```\n\nThis \"whitelist-only\" approach ensures that even if an API key is compromised, the attacker is limited to the pre-approved deployment actions you've defined.\n\n## Real-Time Observability\n\nOne of the most satisfying parts of Bash Runner is watching a build process in real-time. By bridging Node.js `child_process.spawn` with a WebSocket server, we can pipe every line of console output directly to the frontend.\n\n```javascript\nconst child = spawn(command.script, command.args, { cwd: command.cwd });\n\nchild.stdout.on('data', (data) => {\n  socket.emit('output', { type: 'stdout', data: data.toString() });\n});\n\nchild.stderr.on('data', (data) => {\n  socket.emit('output', { type: 'stderr', data: data.toString() });\n});\n```\n\nThis transforms a \"black box\" deployment into a transparent, observable workflow.\n\n## Security Layers\n\nTo protect the command plane, Bash Runner implements multiple layers of defense:\n-   **API Key Authentication**: Required for every request (REST headers or WebSocket query params).\n-   **Execution Isolation**: Commands run in specified working directories with restricted environment variables.\n-   **Audit Logging**: Every command execution (who, when, what) is persisted for later review.\n-   **Docker Integration**: For maximum safety, many commands are configured to run inside ephemeral Docker containers rather than on the host system directly.\n\n## Conclusion\n\nBash Runner isn't just a utility; it's a testament to the power of Node.js in the DevOps ecosystem. By combining the stability of REST with the real-time nature of WebSockets, we've created a tool that makes infrastructure management feel fluid and modern.\n\nThe terminal is no longer a separate world—it's just one API call away.\n\n---\n\n*Interested in secure orchestration? Check out the Bash Runner project details in my [Portfolio](/portfolio/bash-runner-orchestration).*",
+      "reactions": 0,
+      "views": 0,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2026-05-05T13:05:00.000Z",
+      "updatedAt": "2026-05-05T13:05:00.000Z",
+      "tags": [
+        {
+          "id": "t-devops",
+          "name": "DevOps"
+        },
+        {
+          "id": "t-nodejs",
+          "name": "Node.js"
+        },
+        {
+          "id": "t-security",
+          "name": "Security"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "cm_ui_001",
+      "title": "Building the Invisible UI: The Philosophy of Polymorphism in @srcroot/ui",
+      "slug": "building_the_invisible_ui_the_philosophy_of_polymorphism_in_srcroot_ui",
+      "thumbnail": "/images/blog/srcroot-ui-philosophy.png",
+      "content": "In the modern web development landscape, UI libraries often fall into two categories: high-abstraction \"black boxes\" that are difficult to customize, or low-level utility collections that require significant boilerplate. When I started building **@srcroot/ui**, the goal was to find the \"Goldilocks zone\"—a design system that provides a robust, accessible foundation without ever getting in the developer's way.\n\nThe result is what I call **\"The Invisible UI\"**: a system built on the core principle of **Deep Polymorphism**.\n\n## What is Deep Polymorphism?\n\nTraditional React components often limit you to a specific HTML element. A `<Button>` is always a `<button>`. If you need it to be a link, you often have to use a different component or a hacky prop.\n\nIn `@srcroot/ui`, every core component supports the `asChild` pattern (via Radix UI) or a direct `as` prop. This means:\n- A `Button` can be an `<a>` tag for navigation.\n- A `Card` can be a `<section>` or an `<article>` for better SEO.\n- A `Heading` can be any level from `h1` to `h6` while maintaining consistent visual styling.\n\nThis approach ensures that the **visual identity** of the design system is decoupled from the **semantic structure** of the document.\n\n## The Power of CVA (Class Variance Authority)\n\nConsistency is the soul of a design system. However, hardcoding styles into components makes them rigid. To solve this, `@srcroot/ui` leverages **Class Variance Authority (CVA)**.\n\nCVA allows us to define component variants (like `primary`, `outline`, `ghost`) and sizes (`sm`, `md`, `lg`) in a type-safe, declarative way.\n\n```typescript\nconst buttonVariants = cva(\n  \"inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors...\",\n  {\n    variants: {\n      variant: {\n        default: \"bg-primary text-primary-foreground hover:bg-primary/90\",\n        destructive: \"bg-destructive text-destructive-foreground hover:bg-destructive/90\",\n        outline: \"border border-input hover:bg-accent hover:text-accent-foreground\",\n        // ...\n      },\n      size: {\n        default: \"h-10 py-2 px-4\",\n        sm: \"h-9 px-3 rounded-md\",\n        lg: \"h-11 px-8 rounded-md\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n      size: \"default\",\n    },\n  }\n)\n```\n\nBy using CVA, we ensure that every instance of a \"Primary Large Button\" looks exactly the same across every project in the SrcRoot ecosystem.\n\n## Accessibility as a First-Class Citizen\n\nA design system is only as good as its accessibility. `@srcroot/ui` is built on top of **Radix UI primitives**, which handle the heavy lifting of WAI-ARIA compliance. This includes:\n- **Keyboard Navigation**: Full support for Tab, Arrow keys, and Enter/Space interactions.\n- **Focus Management**: Automatic focus trapping in modals and popovers.\n- **Screen Reader Support**: Proper aria-labels, roles, and states are managed automatically.\n\nBy embedding these patterns into the foundation, developers using the library don't have to \"remember\" to make their apps accessible—it happens by default.\n\n## The Copy-and-Paste Philosophy\n\nInspired by the success of `shadcn/ui`, `@srcroot/ui` promotes a \"copy-and-paste\" philosophy for components. Instead of installing a massive npm package that includes 50 components you don't need, you pull in only the source code for what you use.\n\nThis gives you:\n1.  **Zero Bloat**: Only the code you need enters your bundle.\n2.  **Full Ownership**: If you need to change a specific interaction for one project, you can edit the component file directly.\n3.  **Maximum Customizability**: Since it's just code in your `components/ui` folder, it integrates perfectly with your project's Tailwind config.\n\n## Real-World Impact\n\nToday, `@srcroot/ui` powers the entire SrcRoot and ExpressITLab software suite, including:\n- **CalQuick**: The complex commerce dashboard.\n- **SrcRoot PM**: The high-fidelity Kanban board.\n- **Hisabi**: The retail POS interface.\n\nIt has reduced our frontend development time by roughly **40%**, allowing us to focus on business logic rather than re-centering divs or debugging ARIA attributes.\n\n## Conclusion\n\nThe goal of `@srcroot/ui` isn't to be a \"UI Kit.\" It's to be a **UI Foundation**. By prioritizing polymorphism, type-safety, and accessibility, we've built a system that empowers developers to create stunning, accessible interfaces with unprecedented speed.\n\nThe UI should be invisible—it should just work, so your content can shine.\n\n---\n\n*Check out @srcroot/ui on [NPM](https://www.npmjs.com/package/@srcroot/ui) and start building your next project with a robust foundation.*",
+      "reactions": 0,
+      "views": 0,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2026-05-05T13:00:00.000Z",
+      "updatedAt": "2026-05-05T13:00:00.000Z",
+      "tags": [
+        {
+          "id": "t-design-system",
+          "name": "Design System"
+        },
+        {
+          "id": "t-react",
+          "name": "React"
+        },
+        {
+          "id": "t-typescript",
+          "name": "TypeScript"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "cmjih28da0014qgpzudfu5g7v",
+      "title": "The Mind-Machine Synergy: How BCI and AI Are Redefining Human Potential",
+      "slug": "the_mindmachine_synergy_how_bci_and_ai_are_redefining_human_potential",
+      "thumbnail": "https://res.cloudinary.com/dr6ljmeho/image/upload/v1766487507/kmirxtmnuu72tbhrkaex.png",
+      "content": "In the accelerating frontier of modern technology, two fields stand poised to reshape the very nature of human experience: **Brain-Computer Interfaces (BCI)** and **Artificial Intelligence (AI)**.  \n\nIndividually, each has already delivered breakthroughs—from AI-powered diagnostics to BCI-enabled movement for paralyzed patients. But when **integrated**, they form a transformative synergy: a direct bridge between human thought and intelligent machines.  \n\nThis fusion is not just about control or automation—it’s about **amplifying human capability**, restoring lost functions, and reimagining what it means to interact with technology.\n\n## What Is a Brain-Computer Interface (BCI)?\n\nA **Brain-Computer Interface (BCI)** establishes a direct communication channel between the brain and an external device—bypassing traditional pathways like muscles or speech.\n\nBCIs fall into two main categories:\n\n- **Invasive**: Electrodes implanted directly into brain tissue (e.g., Neuralink, BrainGate)\n→ High signal fidelity, but require surgery\n- **Non-invasive**: Sensors placed on the scalp (e.g., EEG headsets like Emotiv or OpenBCI)\n→ Safer and more accessible, though with noisier signals\nAt its core, BCI aims to **translate neural activity into actionable commands**—enabling users to type, move prosthetics, or navigate virtual spaces using only their thoughts.\n\nBut raw brain signals are chaotic. That’s where AI steps in.\n\n## The Critical Role of AI in Unlocking BCI Potential\n\nAI doesn’t just support BCI—it **supercharges** it. Here’s how:\n\n### 🔍 **1. Decoding Neural Signals with Machine Learning**\n\nThe brain emits terabytes of data per second. AI, especially **deep learning models**, excels at:\n\n- Filtering noise from EEG/MEG/fNIRS data\n- Identifying patterns linked to specific intentions (e.g., “move left hand”)\n- Classifying mental states (focus, fatigue, error detection)\n> 📊 **Example**: A CNN can detect motor imagery from EEG topography maps with >85% accuracy—enabling real-time wheelchair control.\n\n\n\n### 🔄 **2. Adaptive, Personalized Interfaces**\n\nNo two brains are alike. AI enables **user-specific calibration** through:\n\n- **Online learning**: Models update in real time as the user interacts\n- **Transfer learning**: Leverage data from other users to accelerate setup\n- **Reinforcement learning**: Optimize control policies based on feedback\n> 🧠 Result: A BCI that “learns you” and becomes more intuitive over time.\n\n\n\n### 🎯 **3. Predictive Intent Recognition**\n\nInstead of reacting, AI-powered BCIs can **anticipate**.\n\n- In a prosthetic arm, AI predicts grasp type based on context (e.g., picking up a cup vs. a pen)\n- In communication systems, language models suggest completions from partial neural inputs\nThis reduces cognitive load and makes interactions feel **natural**, not mechanical.\n\n### 💬 **4. Thought-to-Speech and Thought-to-Text**\n\nFor people with locked-in syndrome, AI-powered BCIs are restoring voice.\n\n- **NLP models** (like Transformers) decode attempted speech from cortical activity\n- Systems can generate fluent sentences at >50 words per minute—approaching natural conversation speeds\n> 🌐 Projects like **Stanford’s Neural Prosthesis** and **Meta’s wrist-based EMG + AI** are pushing these boundaries daily.\n\n\n\n## Real-World Applications: Where BCI + AI Is Making an Impact\n\n### 🏥 **Healthcare Revolution**\n\n- **Paralysis & ALS**: Patients control robotic arms, type messages, or drive wheelchairs with thought\n- **Stroke rehab**: BCIs paired with exoskeletons accelerate neuroplasticity\n- **Epilepsy & Parkinson’s**: AI detects seizure onset or tremor patterns and triggers responsive stimulation\n### 🦾 **Next-Gen Neuroprosthetics**\n\nModern prosthetics don’t just move—they **feel**. AI interprets sensory feedback from neural signals, enabling users to “sense” texture, pressure, or temperature through artificial limbs.\n\n### 🧘 **Mental Health & Cognitive Wellness**\n\n- **Depression/PTSD**: Closed-loop BCIs monitor mood biomarkers and deliver targeted neurofeedback or stimulation\n- **ADHD**: Real-time focus tracking with AI-driven interventions (e.g., adaptive task pacing)\n### 🎮 **Immersive Entertainment**\n\nGaming companies are experimenting with BCIs that:\n\n- Adjust difficulty based on cognitive load\n- Trigger in-game events from emotional states (excitement, fear)\n- Enable hands-free control in VR/AR environments\n### 💼 **Future of Work**\n\nImagine:\n\n- Drafting emails by **thinking the words**\n- Controlling CAD software with **mental gestures**\n- AI automating repetitive tasks based on **predicted intent**\nWhile still emerging, these use cases highlight a future where **thought and action converge seamlessly**.\n\n## Ethical Frontiers: Navigating the Risks\n\nAs powerful as this convergence is, it demands careful stewardship.\n\n### 🔐 **Neural Data Privacy**\n\nBrain data is the ultimate biometric—revealing emotions, intentions, even memories.\n→ Who owns it? How is it stored? Can it be subpoenaed or hacked?\n\n### 🧭 **Cognitive Autonomy**\n\nIf an AI predicts your next move, are you still in control?\n→ We must ensure BCIs **augment**—not **override**—human agency.\n\n### ⚖️ **Equity and Access**\n\nWill neural augmentation become a luxury for the few?\n→ Inclusive design, open-source toolkits (e.g., **OpenBCI**), and public funding are essential.\n\n### ⚠️ **Long-Term Safety**\n\nEspecially for invasive BCIs:  \n\n- What are the risks of chronic implantation?\n- Can neural plasticity be negatively affected?\n> 🌍 The emerging field of **neuroethics** and frameworks like Chile’s **“neuro-rights” law** are critical first steps.\n\n\n\n## The Road Ahead: Toward a Symbiotic Future\n\nWe are still in the **early innings** of the BCI-AI revolution. But the trajectory is clear:\n\n- **Miniaturization**: Wearable, cosmetically discreet BCIs\n- **Multimodal integration**: Combining EEG with eye tracking, EMG, and voice\n- **AI co-pilots**: Systems that understand context, emotion, and intent holistically\n- **Closed-loop intelligence**: BCIs that both **read** and **write** to the brain (e.g., memory enhancement)\nAs these technologies mature, they will blur the line between human and machine—not to replace us, but to **extend our cognition, creativity, and compassion**.\n\n## Conclusion: Building a Human-Centered Future\n\nThe convergence of **Brain-Computer Interfaces** and **Artificial Intelligence** represents more than a technical achievement—it’s a **philosophical shift** in how we relate to technology.\n\nThis isn’t about creating cyborgs. It’s about:\n\n- Giving voice to the voiceless\n- Restoring movement to the immobile\n- Deepening our understanding of the mind itself\nBut with such power comes profound responsibility. To ensure these tools serve **all of humanity**, we must embed **ethics, equity, and empathy** into their design from day one.\n\n> The future of BCI and AI won’t be written in code alone—\nit will be shaped by the values we choose to uphold.\n\n\n\nAnd in that future, the most powerful interface may not be a screen or a voice—\nbut **the human mind, amplified**. 🧠✨\n\n",
+      "reactions": 0,
+      "views": 1,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2025-12-23T10:58:43.241Z",
+      "updatedAt": "2025-12-23T10:59:13.125Z",
+      "tags": [],
+      "_count": {
+        "tags": 0
+      }
+    },
+    {
+      "id": "cmjigv0ga0010qgpzp18cylos",
+      "title": "From Thought to Action: The Role of AI and ML in Advancing Brain-Computer Interface Technology",
+      "slug": "from_thought_to_action_the_role_of_ai_and_ml_in_advancing_braincomputer_interface_technology",
+      "thumbnail": "https://www.techslang.com/wp-content/uploads/2019/11/1111-e1573834183704.jpg",
+      "content": "In the landscape of cutting-edge innovation, few technologies capture the imagination—and promise—as powerfully as **brain-computer interfaces (BCIs)**. Once the stuff of science fiction, BCIs are now a tangible reality, enabling direct communication between the human brain and external machines. And at the heart of this revolution? **Artificial intelligence (AI)** and **machine learning (ML)**.\n\nThese technologies are not just enhancing BCIs—they’re **redefining what’s possible**, making neural interfaces faster, smarter, more adaptive, and increasingly accessible. But how exactly are AI and ML transforming this frontier? Let’s explore.\n\n## What Are Brain-Computer Interfaces (BCIs)?\n\nA **brain-computer interface (BCI)** is a system that translates neural activity—electrical or metabolic signals from the brain—into actionable commands for external devices. With BCIs, users can:\n\n- Control a robotic arm or wheelchair\n- Type messages using only their thoughts\n- Navigate virtual environments\n- Regulate smart home systems\nWhile early BCIs were limited to lab settings, today’s systems are moving into real-world applications—especially in **healthcare**, **gaming**, **education**, and **human-computer interaction**.\n\nYet decoding the brain is no trivial task. The signal is **noisy**, **high-dimensional**, and **highly individualized**. That’s where AI and ML step in.\n\n## The Challenge: Decoding the Brain’s Complexity\n\nThe human brain generates **~86 billion neurons**, each firing in complex, dynamic patterns. Captured via methods like:\n\n- **EEG** (electroencephalography – non-invasive)\n- **fNIRS** (functional near-infrared spectroscopy)\n- **ECoG** or **intracortical electrodes** (invasive)\n…these signals are **buried in noise**, vary across individuals, and change over time due to fatigue, attention, or even mood.\n\nTraditional signal processing—filtering, Fourier transforms, manual feature extraction—struggles with this complexity. Enter **machine learning**.\n\n## How AI and ML Are Powering the BCI Revolution\n\n### 1. **Enhanced Signal Processing with Deep Learning**\n\nML models, particularly **deep neural networks**, excel at extracting meaningful patterns from chaotic data.\n\n- **Convolutional Neural Networks (CNNs)** analyze spatial patterns in EEG topographies.\n- **Recurrent Neural Networks (RNNs)** and **Transformers** model temporal dynamics of neural sequences.\n- **Autoencoders** and **denoising networks** filter out artifacts (e.g., eye blinks, muscle movements).\n> 🎯 **Result**: Higher classification accuracy, lower latency, and more robust command interpretation—even with low-quality, non-invasive signals.\n\n\n\n### 2. **Personalization Through Adaptive AI**\n\nNo two brains are alike. AI enables **user-specific calibration** without requiring hours of manual tuning.\n\n- **Transfer learning** allows models trained on one user to adapt quickly to another.\n- **Online learning** systems continuously update as the user interacts, improving performance over time.\n- **Reinforcement learning** can optimize BCI control policies based on real-time feedback.\nThis personalization is **critical for non-invasive BCIs**, where signal fidelity is lower but accessibility is higher.\n\n### 3. **Real-Time, Low-Latency Inference**\n\nThanks to **edge AI** and optimized neural networks, modern BCIs can process neural data **on-device**, eliminating reliance on cloud servers.\n\n- Frameworks like **TensorFlow Lite** and **ONNX Runtime** enable deployment on wearables.\n- **Quantization** and **pruning** shrink models for resource-constrained hardware.\n> ⚡ This enables seamless, responsive interaction—essential for tasks like prosthetic limb control or AR navigation.\n\n\n\n## Real-World Applications of AI-Driven BCIs\n\n### 🏥 **Healthcare & Rehabilitation**\n\n- **Paralyzed patients** control robotic arms or exoskeletons (e.g., Neuralink, BrainGate).\n- **Locked-in syndrome** patients communicate via thought-to-text systems (e.g., Synchron, CTRL-Labs).\n- **Stroke recovery** is accelerated through BCI-guided neurofeedback therapy.\n### 🎮 **Gaming & Entertainment**\n\n- Companies like **NextMind** (acquired by Snap) and **Emotiv** offer consumer EEG headsets that let users **control games or UIs with focus or intent**.\n- AI interprets cognitive states (e.g., attention, relaxation) to adapt gameplay in real time.\n### 💼 **Workplace & Productivity**\n\n- Experimental systems allow **hands-free control** of computers, reducing physical strain.\n- BCIs integrated with **AR/VR** could enable thought-based design, coding, or data visualization.\n## Ethical Considerations and Societal Challenges\n\nAs BCIs become more capable, we must confront profound ethical questions:\n\n### 🔒 **Neural Data Privacy**\n\n- Who owns your brain data?\n- How is it stored, shared, or monetized?\n- Can it be hacked or manipulated?\n### ⚖️ **Equity and Access**\n\n- Will BCIs widen the gap between those who can afford augmentation and those who cannot?\n- How do we ensure inclusive design for people with diverse neurological conditions?\n### 🧠 **Cognitive Liberty & Agency**\n\n- Could BCIs be used for surveillance, coercion, or behavioral influence?\n- What does “informed consent” mean when your thoughts are the input?\n> 🌐 Regulatory frameworks—like the EU’s proposed **AI Act** and emerging **neuro-rights** legislation—are beginning to address these concerns, but much work remains.\n\n\n\n## The Future: Where AI, ML, and BCIs Are Headed\n\nThe convergence of BCIs with other exponential technologies will unlock unprecedented possibilities:\n\n- **AI + AR/VR**: Navigate mixed-reality worlds with your mind.\n- **BCI + IoT**: Control your entire smart environment—lights, car, appliances—through intention.\n- **Generative AI + BCIs**: Imagine describing a scene in your mind and having an AI generate it instantly.\n- **Closed-loop systems**: BCIs that not only read but **stimulate** the brain (e.g., for mood regulation or memory enhancement).\nResearchers are also exploring **wireless**, **minimally invasive**, and even **nanoscale** interfaces that could make BCIs as common as smartwatches.\n\n## Conclusion\n\nThe journey from **thought to action** is no longer science fiction—it’s a rapidly unfolding reality, powered by the synergy of **AI, machine learning, and neuroscience**.\n\nAI doesn’t just make BCIs smarter; it makes them **human-centered**, **adaptive**, and **scalable**. From restoring lost functions to expanding human potential, the applications are as vast as they are profound.\n\nYet with great power comes great responsibility. As we build systems that interface directly with the mind—the most intimate frontier of human experience—we must prioritize **ethics**, **accessibility**, and **transparency**.\n\nThe future of BCIs isn’t just about reading brains.\nIt’s about **empowering people**—thoughtfully, safely, and equitably.\n\n> 🌟 And that future is being written **right now**, one neural signal at a time.\n\n\n\n",
+      "reactions": 0,
+      "views": 1,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2025-12-23T10:53:06.388Z",
+      "updatedAt": "2025-12-23T10:53:10.580Z",
+      "tags": [
+        {
+          "id": "cmjigv0jf0011qgpz7e7kkbkc",
+          "name": "AI"
+        },
+        {
+          "id": "cmjigv0nz0012qgpzoqnbg1c0",
+          "name": "BCI"
+        },
+        {
+          "id": "cmjigv0sm0013qgpzqfa8di9y",
+          "name": "Brain-Computer Interface"
+        }
+      ],
+      "_count": {
+        "tags": 3
+      }
+    },
+    {
+      "id": "cmjigqahx000xqgpz904iv2na",
+      "title": "The 2025 AI Engineer Roadmap: Your Step-by-Step Guide to Breaking Into Artificial Intelligence",
+      "slug": "the_2025_ai_engineer_roadmap_your_stepbystep_guide_to_breaking_into_artificial_intelligence",
+      "thumbnail": "https://miro.medium.com/v2/resize:fit:1400/0*LHPi9_4-eHYMEbc9",
+      "content": "The transition from a 'Software Engineer' to an 'AI Engineer' is the defining career shift of 2025. As Generative AI moves from novelty to core infrastructure, the demand is no longer just for researchers, but for **Engineers** who can build, deploy, and scale intelligent systems.\n\nThis roadmap is designed to take you from foundational logic to production-grade Agentic AI.\n\n## 1. The 'AI-First' Foundation\n\n### Mathematics: The Silent Engine\nYou don't need a PhD, but you must understand the 'calculus of intelligence':\n- **Linear Algebra**: Matrix multiplications are the heart of Transformers. Understand Tensors.\n- **Optimization**: Gradient Descent and backpropagation. How models actually 'learn'.\n- **Statistics**: Probability distributions and Bayesian inference for handling uncertainty.\n\n### Programming: Python & Beyond\nWhile Python remains the king (NumPy, Pandas, PyTorch), **TypeScript** is becoming essential for the AI frontend and orchestration layers (LangChain.js).\n\n## 2. The LLM Stack (LLMOps)\n\nIn 2025, training from scratch is rare. **Fine-tuning** and **Orchestration** are where the value lies.\n\n### Retrieval-Augmented Generation (RAG)\nStop treating LLMs as static databases. Learn to build RAG pipelines:\n- **Vector Databases**: Pinecone, Milvus, or pgvector.\n- **Embedding Models**: Converting text into high-dimensional semantic space.\n- **Chunking Strategies**: How to break data so the LLM actually understands it.\n\n### Agentic Frameworks\nThe shift is from 'Chatbots' to **'Agents'**—systems that can use tools and make decisions.\n- **LangChain / LangGraph**: Orchestrating complex multi-step workflows.\n- **CrewAI / AutoGen**: Managing groups of AI agents working together.\n\n## 3. Deployment & Scalability\n\nAn AI model in a Jupyter Notebook is a toy. A model in a Docker container behind a FastAPI gateway is a product.\n- **vLLM & Ollama**: High-performance local and cloud serving.\n- **Quantization**: Running massive models on smaller hardware (GGUF, AWQ).\n- **Monitoring**: Tracking hallucinations and latency in production.\n\n## 4. Ethical & Responsible AI\n\nAs you build, you must guard against bias and data leakage. Understand the **EU AI Act** and implement robust PII masking in your training/fine-tuning pipelines.\n\n---\n\n*The best way to learn is to build. Start by creating a simple RAG bot for your own local documents and scale from there.*",
+      "reactions": 0,
+      "views": 0,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2025-12-23T10:49:26.129Z",
+      "updatedAt": "2025-12-23T10:49:26.129Z",
+      "tags": [
+        {
+          "id": "cmjigqakw000yqgpzvoo9ek0h",
+          "name": "ai"
+        },
+        {
+          "id": "cmjigqap8000zqgpzkutev6ax",
+          "name": "roadmap"
+        }
+      ],
+      "_count": {
+        "tags": 2
+      }
+    },
+    {
+      "id": "cmjigkvbb000vqgpz57o845uc",
+      "title": "Understanding Machine Learning: A Comprehensive Guide to Key Algorithms",
+      "slug": "understanding_machine_learning_a_comprehensive_guide_to_key_algorithms",
+      "thumbnail": "https://www.simplilearn.com/ice9/free_resources_article_thumb/10-algorithms-machine-learning-engineers-need-to-know-article.jpg",
+      "content": "Machine Learning (ML) is the science of getting computers to act without being explicitly programmed. It is the engine behind everything from Netflix recommendations to self-driving cars. \n\nTo master ML, you must move beyond just calling `.fit()` and `.predict()`. You must understand the **intuition** and **trade-offs** of the core algorithms.\n\n## 1. Linear & Logistic Regression: The Foundations\n\n### Linear Regression\nUsed for predicting continuous values. The goal is to find the 'Line of Best Fit' by minimizing the **Mean Squared Error (MSE)**.\n- **Complexity**: $O(n \\cdot p^2)$ where $n$ is samples and $p$ is features.\n- **Use Case**: Predicting house prices or stock trends.\n\n### Logistic Regression\nDespite the name, this is for **Classification**. It uses the **Sigmoid Function** to map any real-valued number into a probability between 0 and 1.\n- **Intuition**: It draws a decision boundary that separates classes.\n\n## 2. Decision Trees & Random Forests\n\n### Decision Trees\nA flowchart-like structure. At each node, the algorithm asks a question (e.g., 'Is income > $50k?') to split the data. It uses **Gini Impurity** or **Information Gain** to decide the best split.\n\n### Random Forests (Ensemble Learning)\nWhy use one tree when you can use a forest? Random Forests combine hundreds of trees using **Bagging** (Bootstrap Aggregating). This reduces variance and prevents overfitting.\n- **Pro-tip**: Use Random Forests when you have non-linear data and need high accuracy without much tuning.\n\n## 3. Support Vector Machines (SVM)\n\nSVM finds the 'Maximum Margin Hyperplane'. It doesn't just separate classes; it finds the widest possible 'road' between them.\n- **The Kernel Trick**: SVM can project data into higher dimensions to find linear separations for complex, non-linear patterns.\n\n## 4. K-Nearest Neighbors (KNN)\n\nA 'Lazy Learner'. It doesn't build a model; it just remembers the training data. When predicting, it looks at the 'K' closest points and takes a majority vote.\n- **Downside**: Extremely slow as data grows ($O(n \\cdot p)$ per prediction).\n\n## 5. Neural Networks (Deep Learning)\n\nInspired by the human brain, these consist of layers of interconnected 'neurons'. Each connection has a **weight** that is adjusted during training using **Backpropagation**.\n- **CNNs**: Best for Images.\n- **RNNs/Transformers**: Best for Sequential Data (Text/Time-series).\n\n---\n\n*The best algorithm depends on your data size, dimensionality, and the need for interpretability. Always start simple and iterate.*",
+      "reactions": 0,
+      "views": 3,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2025-12-23T10:45:13.171Z",
+      "updatedAt": "2025-12-23T13:30:01.755Z",
+      "tags": [
+        {
+          "id": "cmjigkved000wqgpz8rhj3rxw",
+          "name": "Machine Learning"
+        }
+      ],
+      "_count": {
+        "tags": 1
+      }
+    },
+    {
+      "id": "cmjigh5f0000uqgpzj6jt0nvn",
+      "title": "Mastering Advanced TypeScript Generics with Real-World Examples",
+      "slug": "mastering_advanced_typescript_generics_with_realworld_examples",
+      "thumbnail": "https://res.cloudinary.com/dr6ljmeho/image/upload/v1766487507/iqrmkewm268cgqrmqwoi.png",
+      "content": "If you've used TypeScript for more than a week, you've seen `<T>`. But generics are more than just placeholders; they are a powerful functional programming language embedded within the type system.\n\nIn this guide, we'll explore three patterns that separate junior TS developers from senior architects.\n\n## 1. Type Constraints & Indexed Access\n\n**The Problem**: You want a function that extracts a value from an object safely. Using `any` is a crime.\n\n**The Solution**: Use `extends keyof` to constrain the generic to the keys of an object.\n\n```typescript\nfunction getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {\n  return obj[key];\n}\n\nconst user = { id: 1, name: 'Antigravity' };\nconst name = getProperty(user, 'name'); // Type is string\nconst error = getProperty(user, 'email'); // Compile Error: 'email' doesn't exist\n```\n\n## 2. Conditional Types: Compile-Time Logic\n\nConditional types allow you to create types that adapt based on a condition: `T extends U ? X : Y`.\n\n**Real-World Example**: A dynamic API response handler.\n\n```typescript\ntype Response<T> = T extends string ? { text: T } : { data: T };\n\nfunction handle<T>(input: T): Response<T> {\n  return (typeof input === 'string' ? { text: input } : { data: input }) as Response<T>;\n}\n```\n\n## 3. Mapped Types: The Ultimate DRY Principle\n\nMapped types allow you to iterate over a union of keys to create a new type. This is how utilities like `Partial<T>` and `Readonly<T>` are built.\n\n```typescript\ntype Mutable<T> = {\n  -readonly [K in keyof T]: T[K]; // Removes 'readonly' from all properties\n};\n\ninterface Config {\n  readonly api: string;\n  readonly port: number;\n}\n\ntype DynamicConfig = Mutable<Config>; // All properties are now editable\n```\n\n## Bonus: Template Literal Types\n\nSince TS 4.1, you can manipulate strings at the type level. Great for creating specific event names or CSS utility types.\n\n```typescript\ntype EventName<T extends string> = `on${Capitalize<T>}`;\ntype ClickEvent = EventName<'click'>; // 'onClick'\n```\n\n---\n\n*Mastering these patterns allows you to build library-grade code that is both flexible and bulletproof.*",
+      "reactions": 0,
+      "views": 1,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2025-12-23T10:42:19.640Z",
+      "updatedAt": "2025-12-23T10:59:22.301Z",
+      "tags": [
+        {
+          "id": "cmiqdqdqv000aaopzke5ce72a",
+          "name": "typescript"
+        }
+      ],
+      "_count": {
+        "tags": 1
+      }
+    },
+    {
+      "id": "cmjiga5bm000tqgpzasrl7oum",
+      "title": "Types of Artificial Intelligence (AI) Models",
+      "slug": "types_of_artificial_intelligence_ai_models",
+      "thumbnail": "https://media.geeksforgeeks.org/wp-content/uploads/20240423120829/Types-of-AI-Models.webp",
+      "content": "AI Models are not a monolith. From the tiny decision trees in your calculator to the massive LLMs running in global data centers, the architecture defines the capability.\n\n## 1. Learning Paradigms\n\n### Supervised Learning\nThe 'Teacher' model. Trained on labeled data. \n- **Key Models**: Linear/Logistic Regression, Random Forests, XGBoost.\n- **Objective**: Map $X$ to $Y$ with minimum error.\n\n### Unsupervised Learning\nThe 'Self-Discovery' model. Finds hidden patterns in unlabeled data.\n- **Key Models**: K-Means Clustering, PCA (Principal Component Analysis).\n- **Objective**: Find the structure of $X$.\n\n### Reinforcement Learning (RL)\nThe 'Reward' model. Learns by trial and error in an environment.\n- **Key Models**: PPO (Proximal Policy Optimization), Q-Learning.\n- **Objective**: Maximize cumulative reward.\n\n## 2. Structural Architectures\n\n### Transformers (The Current King)\nThe backbone of modern AI (GPT, BERT, Claude). They use an **Attention Mechanism** to understand context across long sequences of data.\n\n### Convolutional Neural Networks (CNN)\nThe 'Eyes' of AI. Designed to process grid-like data (Images). They use filters to detect edges, textures, and eventually objects.\n\n### Diffusion Models\nThe 'Artists'. They learn to generate data by reversing a noise process. This is what powers DALL-E and Midjourney.\n\n## 3. Deployment Classification\n\n- **Edge AI**: Tiny models optimized for mobile and IoT (TensorFlow Lite).\n- **Cloud Foundation Models**: Trillion-parameter giants (GPT-4o).\n- **Specialized Small Language Models (SLMs)**: Domain-specific models like BioBERT or CodeLlama.\n\n---\n\n*The choice of model is always a balance between accuracy, latency, and cost.*",
+      "reactions": 0,
+      "views": 0,
+      "authorId": "cmiw71udl0002u0pzwnpmencg",
+      "authorName": "Shifaul Islam",
+      "published": true,
+      "createdAt": "2025-12-23T10:36:52.785Z",
+      "updatedAt": "2025-12-23T10:36:52.785Z",
+      "tags": [],
+      "_count": {
+        "tags": 0
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 14,
+    "totalPages": 2
+  }
+}

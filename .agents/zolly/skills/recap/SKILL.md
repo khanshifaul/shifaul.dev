@@ -158,7 +158,7 @@ RECENT
 - <sha> <subject>          (git log --oneline -15, newest first)
 
 RULES THAT BITE
-- Never commit to master; never push without being asked
+- Never commit to main; never push without being asked
 - A decision that is the human's goes in OPEN-QUESTIONS.md — do not guess
 - <the project's own standing rules, taken from .agents/rules/project.md>
 ```

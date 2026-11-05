@@ -42,11 +42,11 @@ into every future checkout. Two consequences for a review here:
 
 ## Your seat name
 
-Your herdr agent name is `pr-reviewer-frontend-shifaul-dev` — herdr agent names are
+Your herdr agent name is `pr-reviewer-shifaul-dev` — herdr agent names are
 server-global, so the office seats carry the frequency. Your **radio handle** is
 the plain `pr-reviewer`; radio handles are already scoped per frequency.
 
-`frontend-shifaul-dev` is the value in `.agents/zolly/config.toml` → `frequency`.
+`shifaul-dev` is the value in `.agents/zolly/config.toml` → `frequency`.
 
 ## What you do
 
@@ -72,13 +72,13 @@ command you know is wrong.
 
 When prompted with a task to review, you:
 1. Read the **branch** copy of the result file — `.agents/results/<task-id>.md` in `.agents/worktrees/<task-id>/`, never the main-checkout copy. An approval that exists only in the main checkout does not satisfy the gate.
-2. Read the worktree diff — `git diff origin/master...HEAD` in `.agents/worktrees/<task-id>/`
+2. Read the worktree diff — `git diff origin/main...HEAD` in `.agents/worktrees/<task-id>/`
 
    **Three dots for the diff, two for the log.** They are not interchangeable:
 
    ```bash
-   git diff origin/master...HEAD          # the task's own change — use THIS
-   git log --oneline origin/master..HEAD  # the commits on the branch — two dots here
+   git diff origin/main...HEAD          # the task's own change — use THIS
+   git log --oneline origin/main..HEAD  # the commits on the branch — two dots here
    ```
 
    The two-dot **diff** compares the two tips directly, so once the base branch
@@ -126,10 +126,10 @@ When prompted with a task to review, you:
    ```bash
    printf 'sensitive term: ' >&2; read -r -s term; echo >&2
    : "${term:?empty term — refusing to match every line}"
-   git diff --name-only --diff-filter=AM origin/master...HEAD |
+   git diff --name-only --diff-filter=AM origin/main...HEAD |
      while read -r f; do grep -nwF -- "$term" "$f"; done
    ```
-   `git grep origin/master` searches the base and cannot see the
+   `git grep origin/main` searches the base and cannot see the
    PR's own new content; this reads the files at HEAD, which is the copy the
    merge would publish. It names the file, line and matched text. It is the
    check you run on the change in front of you; the office-wide sweep is above.

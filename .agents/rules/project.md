@@ -14,7 +14,7 @@ a question you must answer from the tree before you plan anything.
 
 <!-- TODO: replace this with the truth, verified against the tree on disk. -->
 
-**frontend.shifaul.dev** — TODO: one sentence on what it is and what it is for.
+**shifaul.dev** — TODO: one sentence on what it is and what it is for.
 
 - Application shape: TODO — one process, or several? Name the services.
 - Persistence layer: TODO — what stores the data, and where does it live?
@@ -72,8 +72,8 @@ heuristic (45 words, 3 paths, keyword lists), not a diff-size judgement.
 
 Project wiring the office reads from `.agents/zolly/config.toml`:
 
-- frequency: `frontend-shifaul-dev`
-- base branch: `master`
+- frequency: `shifaul-dev`
+- base branch: `main`
 - remote: `origin`
 
 ## Optional tooling

@@ -103,14 +103,14 @@ internal office task in a public issue. The zolly kit's repository is
    file: the task branch and the result file are the state. The brief itself is
    `.agents/queue/<id>.md`, shaped by `rules/queue-contract.md`.
 2. Read the task. If it says to redo something that already stands, do not.
-3. Do the work. Do not commit to `master`; work on the task branch.
+3. Do the work. Do not commit to `main`; work on the task branch.
 4. Write `.agents/results/<id>.md` with `files_changed`, `verify` (command +
    result), `commit` (sha or none), `blockers`, and `reflection` (the answer to
    `.agents/prompts/post_task_reflect.md`; "nothing to record" is valid), in the
    format `rules/result-contract.md` fixes. **A task without a result file is
    unfinished**, whatever the queue status says.
 5. Commit the result file on the task branch, push the branch, and open the PR
-   (`gh pr create --base master --head foreman/<id>`). The reviewer
+   (`gh pr create --base main --head foreman/<id>`). The reviewer
    reads the branch copy and merges the PR; without both, the task cannot close.
 6. If genuinely blocked, write `gate: human` and say so plainly. Do not approve
    it yourself.

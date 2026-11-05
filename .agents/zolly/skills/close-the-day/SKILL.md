@@ -31,9 +31,9 @@ Steps 1–3 change nothing. Do not write, commit, or push while measuring — a
 measurement that mutates the thing it measures is not a measurement.
 
 ```
-git log --oneline -N master
+git log --oneline -N main
 git status --porcelain
-git rev-list --count master..origin/master
+git rev-list --count main..origin/main
 zolly brief
 herdr agent list
 git log --since='2 hours ago' --oneline | wc -l
@@ -83,7 +83,7 @@ For every statement already made today that you are about to repeat:
 | a test passed | run it now; a truncated tail is not a result |
 | a build passed | run it now |
 | a file exists | `ls` it now |
-| work is merged | `merge-base --is-ancestor` **only for true merge commits**. A **squash-merged** PR leaves no branch commit in the ancestry, so that check returns false for work that merged cleanly — verify by content instead: `git show origin/master:<path>`, or `gh pr view <n> --json state,mergedAt`. Measured 2026-10-16: `--is-ancestor 033ffbec origin/main` said "not in main" for PR #131, which had merged as `b75ef9f4` a minute earlier. Reporting that false negative would have claimed the founder's ruling never landed. |
+| work is merged | `merge-base --is-ancestor` **only for true merge commits**. A **squash-merged** PR leaves no branch commit in the ancestry, so that check returns false for work that merged cleanly — verify by content instead: `git show origin/main:<path>`, or `gh pr view <n> --json state,mergedAt`. Measured 2026-10-16: `--is-ancestor 033ffbec origin/main` said "not in main" for PR #131, which had merged as `b75ef9f4` a minute earlier. Reporting that false negative would have claimed the founder's ruling never landed. |
 | a page renders | load it; a passing build is not a rendering |
 
 If a claim cannot be re-checked in a minute, mark it `not verified` rather than
@@ -115,7 +115,7 @@ Only now, and only what is genuinely complete:
   ```
 
   The chat id is the `ZOLLY_ALLOWED_IDS` value in
-  `~/.config/zolly/frontend-shifaul-dev/credentials` — read the id there, never echo the token that
+  `~/.config/zolly/shifaul-dev/credentials` — read the id there, never echo the token that
   sits in the same file. Do not use `zolly telegram-collab --list` / `--link`
   for this: each sends a real message to the chat (`--view` is the read-only
   variant).

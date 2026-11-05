@@ -58,7 +58,7 @@ Bare `zolly` runs this before the manager starts; use the command by hand only
 to re-open a seat that was closed.
 
 Every herdr agent name carries the frequency, the manager's included:
-`zolly-frontend-shifaul-dev`, `foreman-frontend-shifaul-dev`, `pr-reviewer-frontend-shifaul-dev`.
+`zolly-shifaul-dev`, `foreman-shifaul-dev`, `pr-reviewer-shifaul-dev`.
 herdr names are server-global; a bare `zolly` would collide with a second
 office. Their **radio handles** stay plain (`zolly`, `foreman`, `pr-reviewer`);
 the bus is already scoped per frequency.

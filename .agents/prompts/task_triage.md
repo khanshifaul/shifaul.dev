@@ -34,7 +34,7 @@ with reality. Before you report or build on a claim, **measure it**:
   Do **not** use `git merge-base --is-ancestor` as the test — a squash merge
   leaves no branch commit in the ancestry and returns false for work that landed.
 - A task is done only if `.agents/results/<id>.md` exists **and** its work is on
-  master.
+  main.
 - A service is live only if the production service serves it. A merged branch is
   merged; that is all it means.
 - A number you did not just read is not a number. Say "not logged."

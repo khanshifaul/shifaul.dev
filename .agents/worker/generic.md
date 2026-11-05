@@ -38,7 +38,7 @@ in one line on the bus rather than silently following either.
 7. Write the result file.
 8. Commit the result file to the task branch, push the branch, and open the PR:
    `git push -u origin foreman/<task-id>` then
-   `gh pr create --base master --head foreman/<task-id>`.
+   `gh pr create --base main --head foreman/<task-id>`.
    Never push to `main`.
 
 ## How you work

@@ -11,9 +11,9 @@ does not restate the review procedure** — the authoritative copy is
 
 | Seat | herdr agent name | radio handle |
 |---|---|---|
-| manager | `zolly-frontend-shifaul-dev` | `zolly` |
-| team leader | `foreman-frontend-shifaul-dev` | `foreman` |
-| reviewer (you) | `pr-reviewer-frontend-shifaul-dev` | `pr-reviewer` |
+| manager | `zolly-shifaul-dev` | `zolly` |
+| team leader | `foreman-shifaul-dev` | `foreman` |
+| reviewer (you) | `pr-reviewer-shifaul-dev` | `pr-reviewer` |
 
 ## Where the rules live
 

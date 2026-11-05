@@ -57,12 +57,12 @@ the manager included:
 
 | Seat | herdr agent name | radio handle |
 |---|---|---|
-| manager | `zolly-frontend-shifaul-dev` | `zolly` |
-| team leader | `foreman-frontend-shifaul-dev` | `foreman` |
-| reviewer | `pr-reviewer-frontend-shifaul-dev` | `pr-reviewer` |
-| worker | `worker-frontend-shifaul-dev-<short-id>` | `worker-<task-id>` |
+| manager | `zolly-shifaul-dev` | `zolly` |
+| team leader | `foreman-shifaul-dev` | `foreman` |
+| reviewer | `pr-reviewer-shifaul-dev` | `pr-reviewer` |
+| worker | `worker-shifaul-dev-<short-id>` | `worker-<task-id>` |
 
-`frontend-shifaul-dev` is the value in `.agents/zolly/config.toml` → `frequency`.
+`shifaul-dev` is the value in `.agents/zolly/config.toml` → `frequency`.
 
 herdr caps an agent name at 32 characters and rejects a longer one with
 `invalid_agent_name`. The budget for `<short-id>` is `32 - 8 - len(frequency)`
@@ -99,12 +99,12 @@ herdr agent rename <pane-id> <expected-name>
 ```
 
 `zolly`'s own `adopt_seat()` does exactly this by matching the tab label
-`<handle>@frontend-shifaul-dev`. Check for it after a seat restarts its own session.
+`<handle>@shifaul-dev`. Check for it after a seat restarts its own session.
 
 ## A rebuilt binary does not reach the founder until the listener restarts
 
 The Telegram listener is a long-lived systemd user service
-(`zolly@frontend-shifaul-dev.service`, `ExecStart=… zolly telegram-serve`). Replacing
+(`zolly@shifaul-dev.service`, `ExecStart=… zolly telegram-serve`). Replacing
 `~/.local/bin/zolly` does **not** restart it: the running process keeps
 executing the deleted old inode, and `/proc/<pid>/exe` reads
 `…/zolly (deleted)`. The CLI picks up a new build immediately; the founder's
@@ -115,9 +115,9 @@ After rebuilding or reinstalling the tool, verify the listener actually
 carries it:
 
 ```sh
-pid=$(systemctl --user show zolly@frontend-shifaul-dev.service -p MainPID --value)
+pid=$(systemctl --user show zolly@shifaul-dev.service -p MainPID --value)
 ls -la /proc/$pid/exe            # must be the live path, NOT "(deleted)"
-systemctl --user show zolly@frontend-shifaul-dev.service -p ExecMainStartTimestamp --value
+systemctl --user show zolly@shifaul-dev.service -p ExecMainStartTimestamp --value
 ```
 
 `ls -la /proc/<pid>/exe` is the decisive check — a stale listener reads
@@ -134,7 +134,7 @@ about the listener now. A fact about a long-lived process is a snapshot, not
 a standing truth.
 
 ```sh
-systemctl --user restart zolly@frontend-shifaul-dev.service
+systemctl --user restart zolly@shifaul-dev.service
 ```
 
 Never claim a tool fix is live on the strength of the binary alone. The
@@ -150,7 +150,7 @@ only when it is both from an allowed user and in that user's private chat
 in a group/supergroup is ignored rather than answered there: the brief, gate
 actions, and the OMP collab control link must not be posted to other members.
 
-`ZOLLY_FOUNDER_USERNAME` in `~/.config/zolly/frontend-shifaul-dev/credentials` is the
+`ZOLLY_FOUNDER_USERNAME` in `~/.config/zolly/shifaul-dev/credentials` is the
 founder's handle without the `@`. It is kept for existing templates and
 mentions in generated text; it is not an authorization boundary. Read that one
 line; never read the token beside it into a reply, a log, or a brief.

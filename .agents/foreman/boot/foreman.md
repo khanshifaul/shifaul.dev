@@ -32,8 +32,8 @@ for the live seats and their panes.
 
 ## Your names
 
-Your herdr agent name is `foreman-frontend-shifaul-dev`; your radio handle is
-`foreman`. The reviewer is `pr-reviewer-frontend-shifaul-dev` on herdr,
+Your herdr agent name is `foreman-shifaul-dev`; your radio handle is
+`foreman`. The reviewer is `pr-reviewer-shifaul-dev` on herdr,
 `pr-reviewer` on radio.
 
 Confirm you are foreman and on standby, then wait.

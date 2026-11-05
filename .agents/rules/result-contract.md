@@ -232,7 +232,7 @@ the check **cries wolf**: on a clean office, measured 2026-10-22, it returned
 artefacts (`.rlib`, `.rmeta` — Rust dependencies, where the term appears as a
 coincidental byte run inside a binary), and the rest were markdown in
 `.agents/trash/`, a gitignored scratch folder. The **published** surface was
-clean the whole time: `git grep -nwF -- "$term" origin/master`
+clean the whole time: `git grep -nwF -- "$term" origin/main`
 returns nothing.
 
 A privacy check that reports hits on a clean office teaches its reader to
@@ -245,7 +245,7 @@ agent hits first because it greps a directory and gets a wall of paths.
 "tracked files, and `.agents/results/` once merged". The exclusions make the
 command match that definition: what is left is files a person could read and a
 reader could see. If you want the published surface exactly, use
-`git grep -nwF -- "$term" origin/master` — that one has no
+`git grep -nwF -- "$term" origin/main` — that one has no
 artefacts in it by construction, because git only searches tracked files.
 
 `radio log`, **never** `radio show <id>`. `radio show` is not a read — it is an

@@ -6,7 +6,7 @@ file, not through code.
 
 ## Who
 
-**Shifaul.** Founder and owner of frontend.shifaul.dev. The installer fills
+**Shifaul.** Founder and owner of shifaul.dev. The installer fills
 the name; everything below it is yours to correct.
 
 If you do not know the answer to something in this file, do not guess it —

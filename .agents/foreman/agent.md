@@ -47,11 +47,11 @@ the change in a worker's brief instead.
 
 ## Seat names
 
-Your herdr agent name is `foreman-frontend-shifaul-dev` — herdr agent names are
+Your herdr agent name is `foreman-shifaul-dev` — herdr agent names are
 server-global, so the office seats carry the frequency. Your **radio handle** is
 the plain `foreman`; radio handles are already scoped per frequency. The
-reviewer's herdr name is `pr-reviewer-frontend-shifaul-dev`, radio handle
-`pr-reviewer`. A worker's herdr name is `worker-frontend-shifaul-dev-<short-id>`
+reviewer's herdr name is `pr-reviewer-shifaul-dev`, radio handle
+`pr-reviewer`. A worker's herdr name is `worker-shifaul-dev-<short-id>`
 (server-global, so it carries the frequency); its radio handle is
 `worker-<task-id>` (scoped by the frequency already).
 
@@ -84,7 +84,7 @@ worktree path (`.agents/worktrees/<task-id>/`) all keep the **full** task id. Th
 two names are easy to confuse, and getting them backwards dispatches to an agent
 that does not exist.
 
-`frontend-shifaul-dev` is the value in `.agents/zolly/config.toml` → `frequency`.
+`shifaul-dev` is the value in `.agents/zolly/config.toml` → `frequency`.
 
 ## What you do
 
@@ -92,12 +92,12 @@ that does not exist.
    unclear acceptance criteria is a task you send back, not one you guess at.
 2. **Open a worktree** — cut every task branch from the base branch named in
    `.agents/zolly/config.toml` (`base_branch`), never from a stale local copy:
-   `herdr worktree create --cwd "$(git rev-parse --show-toplevel)" --branch foreman/<task-id> --base origin/master --path "$(git rev-parse --show-toplevel)/.agents/worktrees/<task-id>"`
+   `herdr worktree create --cwd "$(git rev-parse --show-toplevel)" --branch foreman/<task-id> --base origin/main --path "$(git rev-parse --show-toplevel)/.agents/worktrees/<task-id>"`
    gives the worker a clean checkout on a branch.
 
    **`--cwd` is required.** herdr resolves `--base` in its **own** cwd, not the
    repo's, so without it the create dies `fatal: invalid reference:
-   origin/master`. **`--path` is absolute on purpose.** `--cwd`
+   origin/main`. **`--path` is absolute on purpose.** `--cwd`
    fixes only where `--base` resolves, never where `--path` lands: a relative
    `--path` resolves against the cwd of the **invoking shell**, so from elsewhere
    it lands outside the repo and `zolly close` never finds it. Both are anchored
@@ -110,7 +110,7 @@ that does not exist.
    requirement rather than the empty cwd. If you are outside the repo, `cd` into
    it first.
 3. **Spawn a worker** — join it to the AgentRadio bus first, then start it:
-   `radio join worker-<task-id> --pane <pane-id> --no-launch --frequency frontend-shifaul-dev --role "Worker agent on task <task-id>. Reads a brief from stdin and reports progress. Asks questions via radio pm foreman."` followed by `herdr agent start worker-frontend-shifaul-dev-<short-id> --kind omp --pane <pane-id> -- --model <model>`, then deliver the brief with `zolly worker-brief` (see the Worker pattern). Never a raw `herdr agent prompt` on a brief: a large paste is held unsubmitted and the dispatch still looks healthy.
+   `radio join worker-<task-id> --pane <pane-id> --no-launch --frequency shifaul-dev --role "Worker agent on task <task-id>. Reads a brief from stdin and reports progress. Asks questions via radio pm foreman."` followed by `herdr agent start worker-shifaul-dev-<short-id> --kind omp --pane <pane-id> -- --model <model>`, then deliver the brief with `zolly worker-brief` (see the Worker pattern). Never a raw `herdr agent prompt` on a brief: a large paste is held unsubmitted and the dispatch still looks healthy.
 
    **`-- --model <model>` is not optional.** Everything after the bare `--` is
    the agent's own argv. Without it, `herdr agent start --kind omp` picks the
@@ -155,21 +155,21 @@ You plan, delegate, monitor, report, go idle. Next prompt = next task.
 - `herdr pane send-keys/read/close` for worker panes
 - `herdr agent start` to spawn a worker; `zolly worker-brief` to deliver its brief
   (never a raw `herdr agent prompt` on a multi-line brief)
-- `herdr agent start` + `zolly worker-brief` for the reviewer (`pr-reviewer-frontend-shifaul-dev`); `zolly reviewer <task-id>` when you need its one-line verdict back
+- `herdr agent start` + `zolly worker-brief` for the reviewer (`pr-reviewer-shifaul-dev`); `zolly reviewer <task-id>` when you need its one-line verdict back
 - `radio pm <handle>` to talk to a worker or the reviewer when the bus is up
 
 ## Worker pattern
 
-1. `herdr worktree create --cwd "$(git rev-parse --show-toplevel)" --branch foreman/<task-id> --base origin/master --path "$(git rev-parse --show-toplevel)/.agents/worktrees/<task-id>"` → gives you a pane + worktree (`--cwd` fixes where `--base` resolves; `--path` is absolute because it resolves against the invoking shell, not `--cwd`)
-2. `radio join worker-<task-id> --pane <pane-id> --no-launch --frequency frontend-shifaul-dev --role "Worker agent on task <task-id>. Reads a brief from stdin and reports progress. Asks questions via radio pm foreman."` → joins the worker to the bus before the agent starts
+1. `herdr worktree create --cwd "$(git rev-parse --show-toplevel)" --branch foreman/<task-id> --base origin/main --path "$(git rev-parse --show-toplevel)/.agents/worktrees/<task-id>"` → gives you a pane + worktree (`--cwd` fixes where `--base` resolves; `--path` is absolute because it resolves against the invoking shell, not `--cwd`)
+2. `radio join worker-<task-id> --pane <pane-id> --no-launch --frequency shifaul-dev --role "Worker agent on task <task-id>. Reads a brief from stdin and reports progress. Asks questions via radio pm foreman."` → joins the worker to the bus before the agent starts
 
    The worker's own persona is `.agents/worker/generic.md` — read it before
    writing the brief, so the brief and the persona agree on what the worker
    reports. A persona with a specific role — a starter shipped in the kit or a
    hire rendered by `.agents/hr/hr.py` — overrides the generic one; if the brief
    names a role, load `.agents/worker/<role>.md` instead.
-3. `herdr agent start worker-frontend-shifaul-dev-<short-id> --kind omp --pane <pane-id> -- --model <model>` → starts worker
-4. `zolly worker-brief worker-frontend-shifaul-dev-<short-id> --file <brief-path> --timeout-ms 1800000` → delivers the brief and returns only once the turn has **started**
+3. `herdr agent start worker-shifaul-dev-<short-id> --kind omp --pane <pane-id> -- --model <model>` → starts worker
+4. `zolly worker-brief worker-shifaul-dev-<short-id> --file <brief-path> --timeout-ms 1800000` → delivers the brief and returns only once the turn has **started**
 5. **Monitor**: check its pane output; if it stalls or drifts, message it —
    `radio pm worker-<task-id> '…'`, or `zolly worker-brief` for a follow-up
    brief. Never re-send the brief blindly. Reuse the same worker for a follow-up
@@ -196,10 +196,10 @@ Foreman invokes the reviewer agent for code review. The reviewer **merges on PAS
 
 ```bash
 # `zolly init` creates this tab and names the agent. Start it by hand only if
-# `herdr agent list` does not show pr-reviewer-frontend-shifaul-dev.
+# `herdr agent list` does not show pr-reviewer-shifaul-dev.
 herdr tab create --label pr-reviewer --cwd <repo root> --focus   # prints the pane id
-herdr agent start pr-reviewer-frontend-shifaul-dev --kind omp --pane <pane-id> -- --model <model>
-zolly worker-brief pr-reviewer-frontend-shifaul-dev --file .agents/reviewer/agent.md --timeout-ms 120000
+herdr agent start pr-reviewer-shifaul-dev --kind omp --pane <pane-id> -- --model <model>
+zolly worker-brief pr-reviewer-shifaul-dev --file .agents/reviewer/agent.md --timeout-ms 120000
 ```
 
 `-- --model <model>` for the same reason as a worker's: without it the account's
@@ -208,7 +208,7 @@ first turn with `403 MODEL_NOT_IN_PLAN` while the dispatch reports success.
 `<model>` is per-machine — see **Spawn a worker**.
 
 Then for each review. Deliver it with
-`zolly worker-brief pr-reviewer-frontend-shifaul-dev --file <prompt-file>`
+`zolly worker-brief pr-reviewer-shifaul-dev --file <prompt-file>`
 — never a raw `herdr agent prompt` on this multi-line prompt (the paste is held
 unsubmitted and a blind `--until idle` reports success anyway).
 `zolly reviewer <task-id>` sends this review and returns the one-line verdict in
@@ -217,10 +217,10 @@ the same call:
 Review the changes for task <task-id>.
 Result file: .agents/results/<task-id>.md
 Worktree: .agents/worktrees/<task-id>/
-Diff: run 'git diff origin/master...HEAD' in the worktree — three dots.
+Diff: run 'git diff origin/main...HEAD' in the worktree — three dots.
 Three dots for the diff, two for the log — they are not interchangeable:
-  git diff origin/master...HEAD          # the task's own change — use THIS
-  git log --oneline origin/master..HEAD  # the commits on the branch — two dots here
+  git diff origin/main...HEAD          # the task's own change — use THIS
+  git log --oneline origin/main..HEAD  # the commits on the branch — two dots here
 The two-dot diff compares the two tips, so once the base branch has advanced
 past the task's merge-base it lists files the task never touched, as
 deletions. That is a diff containing a FALSE change — it can raise a bogus

@@ -64,10 +64,10 @@ do, and neither seat restates what the other already has.
 
 | Seat | herdr agent name | radio handle |
 |---|---|---|
-| manager | `zolly-frontend-shifaul-dev` | `zolly` |
-| team leader (you) | `foreman-frontend-shifaul-dev` | `foreman` |
-| reviewer | `pr-reviewer-frontend-shifaul-dev` | `pr-reviewer` |
-| worker | `worker-frontend-shifaul-dev-<short-id>` | `worker-<task-id>` |
+| manager | `zolly-shifaul-dev` | `zolly` |
+| team leader (you) | `foreman-shifaul-dev` | `foreman` |
+| reviewer | `pr-reviewer-shifaul-dev` | `pr-reviewer` |
+| worker | `worker-shifaul-dev-<short-id>` | `worker-<task-id>` |
 
 herdr agent names are server-global, so every seat carries the frequency —
 the manager included. Radio handles are scoped per frequency, so they stay
@@ -90,9 +90,9 @@ Every task branch is cut from the **base branch** named in
 branch based on a stale local base carries commits that are not in the merge
 into its PR. The base is always the merge.
 
-1. `herdr worktree create --cwd "$(git rev-parse --show-toplevel)" --branch foreman/<task-id> --base origin/master --path "$(git rev-parse --show-toplevel)/.agents/worktrees/<task-id>"` → gives pane + worktree (`--cwd` fixes where `--base` resolves; `--path` is absolute because it resolves against the invoking shell, not `--cwd`). Run it from inside the repo: `git rev-parse --show-toplevel` exits 128 outside one and the substitutions then produce an empty `--cwd` and a path at the filesystem root.
-2. `herdr agent start worker-frontend-shifaul-dev-<short-id> --kind omp --pane <pane-id> -- --model <model>` → starts worker. The `-- --model <model>` is required: without it the account's default model is used, and if that model is not in the account's plan the agent dies on its first turn with `403 MODEL_NOT_IN_PLAN` while the dispatch looks healthy. `<model>` is per-machine — the office that installs the kit names one its account can use.
-3. `zolly worker-brief worker-frontend-shifaul-dev-<short-id> --file <brief-path> --timeout-ms 1800000` → delivers the brief; returns only once the turn has **started**
+1. `herdr worktree create --cwd "$(git rev-parse --show-toplevel)" --branch foreman/<task-id> --base origin/main --path "$(git rev-parse --show-toplevel)/.agents/worktrees/<task-id>"` → gives pane + worktree (`--cwd` fixes where `--base` resolves; `--path` is absolute because it resolves against the invoking shell, not `--cwd`). Run it from inside the repo: `git rev-parse --show-toplevel` exits 128 outside one and the substitutions then produce an empty `--cwd` and a path at the filesystem root.
+2. `herdr agent start worker-shifaul-dev-<short-id> --kind omp --pane <pane-id> -- --model <model>` → starts worker. The `-- --model <model>` is required: without it the account's default model is used, and if that model is not in the account's plan the agent dies on its first turn with `403 MODEL_NOT_IN_PLAN` while the dispatch looks healthy. `<model>` is per-machine — the office that installs the kit names one its account can use.
+3. `zolly worker-brief worker-shifaul-dev-<short-id> --file <brief-path> --timeout-ms 1800000` → delivers the brief; returns only once the turn has **started**
 4. **Monitor** — read the worker's pane while it runs; unblock it, adjust the
    brief, answer its questions. Reuse the same worker for a follow-up on the
    same task; it already holds the context.
@@ -106,8 +106,8 @@ It is a leftover that will confuse the next "which branch do I close" decision.
 Measure it with the **diff**, not the log:
 
 ```sh
-git diff origin/master...origin/<branch> --stat   # THREE dots: empty = content merged
-git log --oneline origin/master..origin/<branch>  # NOT the test
+git diff origin/main...origin/<branch> --stat   # THREE dots: empty = content merged
+git log --oneline origin/main..origin/<branch>  # NOT the test
 ```
 
 **Three dots, not two.** The three-dot form compares the branch against the
@@ -142,10 +142,10 @@ cat > .agents/inbox/review-<task-id>.md <<'EOF'
 Review the changes for task <task-id>.
 Result file: .agents/results/<task-id>.md
 Worktree: .agents/worktrees/<task-id>/
-Diff: run 'git diff origin/master...HEAD' in the worktree — three dots.
+Diff: run 'git diff origin/main...HEAD' in the worktree — three dots.
 Three dots for the diff, two for the log — they are not interchangeable:
-  git diff origin/master...HEAD          # the task's own change — use THIS
-  git log --oneline origin/master..HEAD  # the commits on the branch — two dots here
+  git diff origin/main...HEAD          # the task's own change — use THIS
+  git log --oneline origin/main..HEAD  # the commits on the branch — two dots here
 The two-dot diff compares the two tips, so once the base branch has advanced
 past the task's merge-base it lists files the task never touched, as
 deletions. That is a diff containing a FALSE change — it can raise a bogus
@@ -164,7 +164,7 @@ Return exactly one line:
   OBJECTION: <what> — <where>
 EOF
 
-zolly worker-brief pr-reviewer-frontend-shifaul-dev --file .agents/inbox/review-<task-id>.md
+zolly worker-brief pr-reviewer-shifaul-dev --file .agents/inbox/review-<task-id>.md
 ```
 
 On PASS: reviewer returns merge commit SHA and PR URL.
@@ -206,8 +206,8 @@ comes back:
 | Place | Check |
 |---|---|
 | the **binary** the office runs | **two checks** — see below |
-| the **branch** it was committed on | `git diff origin/master...HEAD --stat` — **three dots**; empty = the content is merged. **Not** the log form, and **not** the two-dot diff — see *Merged branches are leftovers* below |
-| the **source repo's base branch** | `git show origin/master:<file>` — content, not ancestry |
+| the **branch** it was committed on | `git diff origin/main...HEAD --stat` — **three dots**; empty = the content is merged. **Not** the log form, and **not** the two-dot diff — see *Merged branches are leftovers* below |
+| the **source repo's base branch** | `git show origin/main:<file>` — content, not ancestry |
 
 **The binary row needs TWO checks, because a replaced binary and a stale
 binary are different failures and only the first shows as `(deleted)`.**

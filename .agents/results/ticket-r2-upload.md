@@ -3,6 +3,7 @@ id: ticket-r2-upload
 title: Store support-ticket attachments in R2, not mock URLs
 status: done
 gate: human
+approved: yes
 ---
 
 ## Summary

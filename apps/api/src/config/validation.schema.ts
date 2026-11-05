@@ -71,6 +71,9 @@ export const validationSchema = Joi.object({
   THROTTLE_TTL: Joi.number().default(60000),
   THROTTLE_LIMIT: Joi.number().default(100),
 
+  // Visitor geolocation (Telegram visitor notes)
+  GEOIP_URL: Joi.string().uri().allow('').optional(),
+
   // Cloudflare R2 Configuration
   R2_ACCESS_KEY_ID: Joi.string().optional(),
   R2_SECRET_ACCESS_KEY: Joi.string().optional(),

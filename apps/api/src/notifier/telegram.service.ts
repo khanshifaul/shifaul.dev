@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { formatVisitorLocalTime, VisitorLocation } from './visitor-location';
 
 /**
  * Telegram Bot API client — shared notifier used by:
@@ -153,19 +154,29 @@ export class TelegramService {
     path: string;
     referrer?: string | null;
     userAgent?: string | null;
-    country?: string | null;
-    city?: string | null;
+    ip?: string | null;
+    location?: VisitorLocation | null;
     isReturning?: boolean;
   }): Promise<boolean> {
     const lines: string[] = [];
+    const location = input.location ?? null;
     lines.push(
       input.isReturning ? '🔁 <b>Returning visitor</b>' : '🆕 <b>New visitor</b>',
     );
     lines.push(`<b>Path:</b> ${escape(input.path)}`);
+    if (input.ip) lines.push(`<b>IP:</b> <code>${escape(input.ip)}</code>`);
     if (input.referrer) lines.push(`<b>Referrer:</b> ${escape(input.referrer)}`);
-    if (input.country || input.city) {
-      lines.push(`<b>Location:</b> ${escape([input.city, input.country].filter(Boolean).join(', '))}`);
-    }
+    const place = [
+      location?.city,
+      location?.region,
+      location?.countryCode,
+    ]
+      .filter(Boolean)
+      .join(', ');
+    if (place) lines.push(`<b>Location:</b> ${escape(place)}`);
+    if (location?.isp) lines.push(`<b>ISP:</b> ${escape(location.isp)}`);
+    const localTime = formatVisitorLocalTime(location?.timezone);
+    if (localTime) lines.push(`<b>Local time:</b> ${escape(localTime)}`);
     if (input.userAgent) {
       // Shorten UA for readability
       const short = input.userAgent.length > 200

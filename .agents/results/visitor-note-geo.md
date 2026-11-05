@@ -3,6 +3,7 @@ id: visitor-note-geo
 title: Visitor Telegram note carries IP, location, ISP and local time
 status: done
 gate: human
+approved: yes
 ---
 
 ## Summary

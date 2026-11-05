@@ -8,6 +8,9 @@ import { LoggerService } from '../utils/logger/logger.service';
 @Injectable()
 export class StorageService {
     private s3Client: S3Client;
+    private accessKeyId: string;
+    private secretAccessKey: string;
+    private accountId: string;
     private bucketName: string;
     private publicUrl: string;
 
@@ -15,20 +18,35 @@ export class StorageService {
         private readonly configService: ConfigService,
         private readonly logger: LoggerService,
     ) {
-        const accessKeyId = this.configService.get<string>('R2_ACCESS_KEY_ID') || '';
-        const secretAccessKey = this.configService.get<string>('R2_SECRET_ACCESS_KEY') || '';
-        const accountId = this.configService.get<string>('R2_ACCOUNT_ID') || '';
+        this.accessKeyId = this.configService.get<string>('R2_ACCESS_KEY_ID') || '';
+        this.secretAccessKey = this.configService.get<string>('R2_SECRET_ACCESS_KEY') || '';
+        this.accountId = this.configService.get<string>('R2_ACCOUNT_ID') || '';
         this.bucketName = this.configService.get<string>('R2_BUCKET_NAME') || '';
         this.publicUrl = this.configService.get<string>('R2_PUBLIC_URL') || '';
 
         this.s3Client = new S3Client({
             region: 'auto',
-            endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+            endpoint: `https://${this.accountId}.r2.cloudflarestorage.com`,
             credentials: {
-                accessKeyId,
-                secretAccessKey,
+                accessKeyId: this.accessKeyId,
+                secretAccessKey: this.secretAccessKey,
             },
         });
+    }
+
+    /**
+     * Whether the R2 credentials, account and bucket needed to upload are present.
+     * Callers use this to fail fast with a clear error instead of a signed request
+     * to an endpoint that cannot exist.
+     */
+    isConfigured(): boolean {
+        return Boolean(
+            this.accessKeyId &&
+            this.secretAccessKey &&
+            this.accountId &&
+            this.bucketName &&
+            this.publicUrl,
+        );
     }
 
     /**

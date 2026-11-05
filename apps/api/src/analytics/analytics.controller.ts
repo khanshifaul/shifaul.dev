@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Req } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
+import { GeoLookupService } from './geo-lookup.service';
 import { TelegramService } from '../notifier/telegram.service';
 import type { Request } from 'express';
 import { Public } from '../common/decorators/public.decorator';
@@ -27,6 +28,7 @@ export class AnalyticsController {
   constructor(
     private readonly analyticsService: AnalyticsService,
     private readonly telegram: TelegramService,
+    private readonly geoLookup: GeoLookupService,
   ) {}
 
   @Public()
@@ -100,21 +102,32 @@ export class AnalyticsController {
           if (now - t > DEDUPE_TTL_MS) recentVisitors.delete(k);
         }
       }
-      // Fire-and-forget
-      this.telegram
-        .sendVisitorVisit({
-          path: body.path,
-          referrer: body.referrer ?? null,
-          userAgent,
-          country: body.country ?? null,
-          city: body.city ?? null,
-          isReturning: body.isReturning ?? false,
-        })
-        .catch(() => {
-          // Already logged inside the service
-        });
+      // Fire-and-forget: resolve the location inside the async path so the
+      // /analytics/visit response never waits on a geo lookup.
+      void this.notifyVisitor({
+        path: body.path,
+        referrer: body.referrer ?? null,
+        userAgent,
+        ip,
+        isReturning: body.isReturning ?? false,
+      });
     }
 
     return { recorded: true, eventId: event ? (event as any).id : null, isNew };
+  }
+
+  private async notifyVisitor(input: {
+    path: string;
+    referrer: string | null;
+    userAgent: string;
+    ip: string;
+    isReturning: boolean;
+  }): Promise<void> {
+    try {
+      const location = await this.geoLookup.lookup(input.ip);
+      await this.telegram.sendVisitorVisit({ ...input, location });
+    } catch {
+      // Already logged inside the services
+    }
   }
 }

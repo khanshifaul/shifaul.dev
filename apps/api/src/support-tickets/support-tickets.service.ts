@@ -1,8 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { Priority, ReopenStatus, TicketStatus } from "prisma/generated/client";
 import { DatabaseService } from '../database/database.service';
 import { LoggerService } from '../utils/logger/logger.service';
 import { PermissionUtils } from '../common/utils/permission.util';
+import { StorageService } from '../storage/storage.service';
 import { CreateReopenRequestDto } from './dto/create-reopen-request.dto';
 import { CreateSupportTicketDto } from './dto/create-support-ticket.dto';
 import { CreateTicketReplyDto } from './dto/create-ticket-reply.dto';
@@ -32,6 +33,7 @@ export class SupportTicketsService {
     constructor(
         private readonly prisma: DatabaseService,
         private readonly logger: LoggerService,
+        private readonly storageService: StorageService,
     ) {
         this.logger.info('SupportTicketsService constructor called');
     }
@@ -42,33 +44,56 @@ export class SupportTicketsService {
      * @returns Promise<FileMetadata[]> - Array of uploaded file metadata
      */
     private async uploadFilesToExternalAPI(files: Express.Multer.File[]): Promise<FileMetadata[]> {
+        if (!this.storageService.isConfigured()) {
+            this.logger.error('Cannot upload support ticket attachments: R2 storage is not configured');
+            throw new ServiceUnavailableException(
+                'File storage is not configured; attachments cannot be uploaded',
+            );
+        }
+
         try {
-            // TODO: Implement actual external API upload with security
-            // For now, return mock data to allow compilation
-            const mockFileMetadata: FileMetadata[] = files.map((file, index) => ({
-                id: `mock-id-${index}`,
-                url: `https://storage.shifaul.dev/mock/${file.originalname}`,
-                name: file.originalname,
-                size: file.size,
-                mimeType: file.mimetype,
+            const uploadedFiles = await Promise.all(
+                files.map(file =>
+                    this.storageService.uploadFile(
+                        file.buffer,
+                        file.originalname,
+                        file.mimetype,
+                        'support-tickets',
+                    ),
+                ),
+            );
+
+            this.logger.info(`Uploaded ${uploadedFiles.length} files to R2`);
+
+            return uploadedFiles.map((uploaded, index) => ({
+                id: uploaded.key,
+                url: uploaded.fileUrl,
+                name: files[index].originalname,
+                size: files[index].size,
+                mimeType: files[index].mimetype,
             }));
-            
-            this.logger.info(`Mock upload completed for ${files.length} files`);
-            return mockFileMetadata;
         } catch (error) {
-            this.logger.error('Failed to upload files to external API', error.message);
-            throw new BadRequestException('File upload failed');
+            this.logger.error('Failed to upload files to R2', error.message);
+            throw error;
         }
     }
 
     async createTicket(userId: string, dto: CreateSupportTicketDto, files?: Express.Multer.File[]) {
         try {
+            // Upload first: a failed upload must not leave a ticket row behind.
+            let fileUrls: string[] = [];
+            if (files && files.length > 0) {
+                const uploadedFileMetadata = await this.uploadFilesToExternalAPI(files);
+                fileUrls = uploadedFileMetadata.map(file => file.url);
+            }
+
             const ticket = await this.prisma.supportTicket.create({
                 data: {
                     title: dto.title,
                     description: dto.description,
                     priority: dto.priority || Priority.NORMAL,
                     createdById: userId,
+                    fileUrls,
                 },
                 include: {
                     createdBy: {
@@ -95,36 +120,13 @@ export class SupportTicketsService {
                 },
             });
 
-            // Handle uploaded files if provided
-            if (files && files.length > 0) {
-                const uploadedFileMetadata = await this.uploadFilesToExternalAPI(files);
-                if (uploadedFileMetadata && uploadedFileMetadata.length > 0) {
-                    // Extract URLs from the uploaded files
-                    const uploadedFileUrls = uploadedFileMetadata.map(file => file.url);
-                    
-                    // Get current fileUrls and append new ones
-                    const currentTicket = await this.prisma.supportTicket.findUnique({
-                        where: { id: ticket.id },
-                        select: { fileUrls: true },
-                    });
-                    const existingUrls = currentTicket?.fileUrls || [];
-                    const combinedUrls = [...existingUrls, ...uploadedFileUrls];
-
-                    await this.prisma.supportTicket.update({
-                        where: { id: ticket.id },
-                        data: {
-                            fileUrls: combinedUrls,
-                        } as any,
-                    });
-                    // Add combined fileUrls to the returned ticket object
-                    (ticket as any).fileUrls = combinedUrls;
-                }
-            }
-
             this.logger.info(`Support ticket created: ${ticket.id} by user ${userId}`);
 
             return ticket;
         } catch (error) {
+            if (error instanceof HttpException) {
+                throw error;
+            }
             this.logger.error(`Failed to create support ticket for user ${userId}`, error.message);
             SupportTicketErrorHandler.handleValidationError(error);
         }
@@ -457,12 +459,20 @@ export class SupportTicketsService {
                 throw new ForbiddenException('You can only reply to your own tickets or tickets assigned to you');
             }
 
+            // Upload first: a failed upload must not leave a reply row behind.
+            let fileUrls: string[] = [];
+            if (files && files.length > 0) {
+                const uploadedFileMetadata = await this.uploadFilesToExternalAPI(files);
+                fileUrls = uploadedFileMetadata.map(file => file.url);
+            }
+
             const reply = await this.prisma.ticketReply.create({
                 data: {
                     ticketId,
                     authorId: userId,
                     content: dto.content,
                     isInternal: dto.isInternal || false,
+                    fileUrls,
                 },
                 include: {
                     author: {
@@ -474,28 +484,6 @@ export class SupportTicketsService {
                     },
                 },
             });
-
-            // Handle uploaded files if provided
-            if (files && files.length > 0) {
-                const uploadedFileMetadata = await this.uploadFilesToExternalAPI(files);
-                if (uploadedFileMetadata && uploadedFileMetadata.length > 0) {
-                    // Extract URLs from the uploaded files
-                    const fileUrls = uploadedFileMetadata.map(file => file.url);
-
-                    // Update reply with file URLs
-                    if (fileUrls.length > 0) {
-                        await this.prisma.ticketReply.update({
-                            where: { id: reply.id },
-                            data: {
-                                fileUrls: fileUrls,
-                            },
-                        });
-
-                        // Add fileUrls to the returned reply object
-                        (reply as any).fileUrls = fileUrls;
-                    }
-                }
-            }
 
             // Update ticket's updatedAt timestamp
             await this.prisma.supportTicket.update({

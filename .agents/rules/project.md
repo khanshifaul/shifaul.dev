@@ -21,7 +21,7 @@ a question you must answer from the tree before you plan anything.
 - Client side: TODO — what does a user actually talk to?
 - Test command: TODO — the exact command that runs the suite.
 
-test-command: TODO
+test-command: bun run --filter '@shifaul/api' test && bun run --filter '@shifaul/api' test:e2e
 
 `zolly verify <task-id>` runs that line in the task worktree and rewrites the
 result's `## Verify` section. Leave it as `TODO` until you know the command;

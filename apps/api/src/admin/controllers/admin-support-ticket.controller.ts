@@ -610,28 +610,28 @@ export class AdminSupportTicketController {
           overview: {
             totalTickets: 150,
             openTickets: 45,
-            averageResolutionTime: 1440, // minutes
-            customerSatisfaction: 4.2,
+            averageResolutionTime: 24, // hours
+            customerSatisfaction: null, // no rating column on SupportTicket
             firstResponseTime: 180, // minutes
           },
           trends: {
             ticketsThisMonth: 67,
             ticketsLastMonth: 58,
-            growthRate: 15.5,
-            resolutionRate: 85.3,
+            growthRate: 15.52,
+            resolutionRate: 85.33,
           },
           byPriority: [
-            { priority: 'LOW', count: 45, averageResolutionTime: 2880 },
-            { priority: 'NORMAL', count: 67, averageResolutionTime: 1440 },
-            { priority: 'HIGH', count: 23, averageResolutionTime: 720 },
-            { priority: 'URGENT', count: 15, averageResolutionTime: 180 },
+            { priority: 'LOW', count: 45, averageResolutionTime: 48 },
+            { priority: 'NORMAL', count: 67, averageResolutionTime: 24 },
+            { priority: 'HIGH', count: 23, averageResolutionTime: 12 },
+            { priority: 'URGENT', count: 15, averageResolutionTime: 3 },
           ],
           byAssignee: [
             {
               assigneeId: 'staff-123',
               assigneeName: 'John Support',
               ticketCount: 25,
-              averageResolutionTime: 1200,
+              averageResolutionTime: 20,
             },
           ],
         },

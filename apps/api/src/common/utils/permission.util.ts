@@ -16,6 +16,17 @@ export enum UserRole {
  */
 export class PermissionUtils {
   /**
+   * Roles that count as staff — the single definition `isStaff` and any
+   * database filter must agree on.
+   */
+  static readonly STAFF_ROLES: string[] = [
+    UserRole.ADMIN,
+    UserRole.STAFF,
+    UserRole.SUPPORT_AGENT,
+    UserRole.DEVELOPER,
+  ];
+
+  /**
    * Check if user has admin role
    */
   static isAdmin(roles: string[]): boolean {
@@ -26,12 +37,7 @@ export class PermissionUtils {
    * Check if user has staff role (admin, staff, or support agent)
    */
   static isStaff(roles: string[]): boolean {
-    return roles.some(role => 
-      role === UserRole.ADMIN || 
-      role === UserRole.STAFF || 
-      role === UserRole.SUPPORT_AGENT ||
-      role === UserRole.DEVELOPER
-    );
+    return roles.some(role => PermissionUtils.STAFF_ROLES.includes(role));
   }
 
   /**

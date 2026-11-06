@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { PermissionUtils } from '../../common/utils/permission.util';
 import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
@@ -6,8 +7,6 @@ export class AdminSupportTicketService {
   private readonly logger = new Logger(AdminSupportTicketService.name);
 
   constructor(private readonly prisma: DatabaseService) {}
-
-  // TODO: Implement complete support ticket management service
 
   async getAllTickets(query: any): Promise<any> {
     try {
@@ -475,41 +474,117 @@ export class AdminSupportTicketService {
 
   async getTicketAnalytics(): Promise<any> {
     try {
-      const totalTickets = await this.prisma.supportTicket.count();
+      const now = new Date();
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastMonthStart = new Date(
+        now.getFullYear(),
+        now.getMonth() - 1,
+        1,
+      );
 
-      const ticketsByStatus = await this.prisma.supportTicket.groupBy({
-        by: ['status'],
-        _count: { id: true },
-      });
+      const [
+        totalTickets,
+        ticketsByStatus,
+        ticketsByPriority,
+        ticketsThisMonth,
+        ticketsLastMonth,
+        resolvedTickets,
+        firstStaffReplies,
+        assigneeStats,
+      ] = await Promise.all([
+        this.prisma.supportTicket.count(),
+        this.prisma.supportTicket.groupBy({
+          by: ['status'],
+          _count: { id: true },
+        }),
+        this.prisma.supportTicket.groupBy({
+          by: ['priority'],
+          _count: { id: true },
+        }),
+        this.prisma.supportTicket.count({
+          where: { createdAt: { gte: thisMonthStart } },
+        }),
+        this.prisma.supportTicket.count({
+          where: { createdAt: { gte: lastMonthStart, lt: thisMonthStart } },
+        }),
+        // Calculate resolution time (simplified)
+        this.prisma.supportTicket.findMany({
+          where: { status: 'RESOLVED' },
+          select: { createdAt: true, updatedAt: true, priority: true },
+        }),
+        // A non-internal reply from staff is a first response.
+        this.prisma.ticketReply.findMany({
+          where: {
+            isInternal: false,
+            author: {
+              is: { roles: { hasSome: PermissionUtils.STAFF_ROLES } },
+            },
+          },
+          select: {
+            ticketId: true,
+            createdAt: true,
+            ticket: { select: { createdAt: true } },
+          },
+          orderBy: { createdAt: 'asc' },
+        }),
+        // Get assignee performance
+        this.prisma.supportTicket.groupBy({
+          by: ['assignedToId'],
+          where: { assignedToId: { not: null } },
+          _count: { id: true },
+        }),
+      ]);
 
-      const ticketsByPriority = await this.prisma.supportTicket.groupBy({
-        by: ['priority'],
-        _count: { id: true },
-      });
-
-      // Calculate resolution time (simplified)
-      const resolvedTickets = await this.prisma.supportTicket.findMany({
-        where: { status: 'RESOLVED' },
-        select: { createdAt: true, updatedAt: true },
-      });
+      // Average resolution time in hours, overall and per priority, from the
+      // updatedAt - createdAt proxy. Null when nothing has resolved yet.
+      let totalResolutionTime = 0;
+      const resolutionByPriority = new Map<
+        string,
+        { total: number; count: number }
+      >();
+      for (const ticket of resolvedTickets) {
+        const resolutionTime =
+          ticket.updatedAt.getTime() - ticket.createdAt.getTime();
+        totalResolutionTime += resolutionTime;
+        const bucket = resolutionByPriority.get(ticket.priority) ?? {
+          total: 0,
+          count: 0,
+        };
+        bucket.total += resolutionTime;
+        bucket.count += 1;
+        resolutionByPriority.set(ticket.priority, bucket);
+      }
 
       const avgResolutionTime =
         resolvedTickets.length > 0
-          ? resolvedTickets.reduce((sum, ticket) => {
-              const resolutionTime =
-                ticket.updatedAt.getTime() - ticket.createdAt.getTime();
-              return sum + resolutionTime;
-            }, 0) /
+          ? totalResolutionTime /
             resolvedTickets.length /
             (1000 * 60 * 60) // Convert to hours
-          : 0;
+          : null;
 
-      // Get assignee performance
-      const assigneeStats = await this.prisma.supportTicket.groupBy({
-        by: ['assignedToId'],
-        where: { assignedToId: { not: null } },
-        _count: { id: true },
-      });
+      // First response: the earliest non-internal staff reply on each ticket,
+      // measured from the ticket's creation, in minutes.
+      const repliedTicketIds = new Set<string>();
+      const firstResponseTimes: number[] = [];
+      for (const reply of firstStaffReplies) {
+        if (repliedTicketIds.has(reply.ticketId)) continue;
+        repliedTicketIds.add(reply.ticketId);
+        firstResponseTimes.push(
+          reply.createdAt.getTime() - reply.ticket.createdAt.getTime(),
+        );
+      }
+
+      const avgFirstResponseTime =
+        firstResponseTimes.length > 0
+          ? firstResponseTimes.reduce((sum, time) => sum + time, 0) /
+            firstResponseTimes.length /
+            (1000 * 60) // Convert to minutes
+          : null;
+
+      const growthRate =
+        ticketsLastMonth > 0
+          ? ((ticketsThisMonth - ticketsLastMonth) / ticketsLastMonth) * 100
+          : 0;
 
       const assigneePerformance = await Promise.all(
         assigneeStats.map(async (stat) => {
@@ -564,14 +639,21 @@ export class AdminSupportTicketService {
             0,
           closedTickets:
             ticketsByStatus.find((s) => s.status === 'CLOSED')?._count.id || 0,
-          averageResolutionTime: Math.round(avgResolutionTime * 100) / 100,
-          customerSatisfaction: 0, // TODO: Implement customer satisfaction tracking
-          firstResponseTime: 0, // TODO: Implement first response time tracking
+          averageResolutionTime:
+            avgResolutionTime === null
+              ? null
+              : Math.round(avgResolutionTime * 100) / 100,
+          // SupportTicket has no rating column: null is "not measured".
+          customerSatisfaction: null,
+          firstResponseTime:
+            avgFirstResponseTime === null
+              ? null
+              : Math.round(avgFirstResponseTime * 100) / 100,
         },
         trends: {
-          ticketsThisMonth: 0, // TODO: Implement monthly trends
-          ticketsLastMonth: 0,
-          growthRate: 0,
+          ticketsThisMonth,
+          ticketsLastMonth,
+          growthRate: Math.round(growthRate * 100) / 100,
           resolutionRate:
             totalTickets > 0
               ? ((ticketsByStatus.find((s) => s.status === 'RESOLVED')?._count
@@ -580,11 +662,19 @@ export class AdminSupportTicketService {
                 100
               : 0,
         },
-        byPriority: ticketsByPriority.map((p) => ({
-          priority: p.priority,
-          count: p._count.id,
-          averageResolutionTime: 0, // TODO: Calculate per priority
-        })),
+        byPriority: ticketsByPriority.map((p) => {
+          const bucket = resolutionByPriority.get(p.priority);
+
+          return {
+            priority: p.priority,
+            count: p._count.id,
+            averageResolutionTime: bucket
+              ? Math.round(
+                  (bucket.total / bucket.count / (1000 * 60 * 60)) * 100,
+                ) / 100
+              : null,
+          };
+        }),
         byAssignee: assigneePerformance.filter(Boolean),
       };
     } catch (error) {

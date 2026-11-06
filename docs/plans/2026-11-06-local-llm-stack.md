@@ -38,6 +38,7 @@ a llama.cpp server running LFM3, plus a local vector + graph store.
 | D5 | Store | **Kùzu** embedded (one file, graph + vector index) | single dependency, no server, cp314 wheels |
 | D6 | Scope | workstation only (Zolly + local Butlar dev) | production Butlar runs on Render; a local server cannot serve it |
 | D7 | Network | bind `127.0.0.1` only | local model, no egress, no auth exposure |
+| D8 | Ports | zolly listeners own **9901–9999** (shifaul-dev 9901, zylosync 9902, pijunctionbd 9903, guzia 9904); llama.cpp serves **8080**; embeddings 8081 | founder rule: nothing of zollybot sits below 9901 |
 
 Alternatives rejected: SQLite + `sqlite-vec` (vector only; graph becomes manual
 joins), Postgres + pgvector + Apache AGE (no local server running and three

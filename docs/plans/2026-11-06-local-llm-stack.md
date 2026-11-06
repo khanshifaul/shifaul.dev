@@ -39,6 +39,7 @@ a llama.cpp server running LFM3, plus a local vector + graph store.
 | D6 | Scope | workstation only (Zolly + local Butlar dev) | production Butlar runs on Render; a local server cannot serve it |
 | D7 | Network | bind `127.0.0.1` only | local model, no egress, no auth exposure |
 | D8 | Ports | zolly listeners own **9901–9999** (shifaul-dev 9901, zylosync 9902, pijunctionbd 9903, guzia 9904); llama.cpp serves **8080**; embeddings 8081 | founder rule: nothing of zollybot sits below 9901 |
+| D9 | Phone model | `llama.rn` in `apps/mobile`, GGUF models from our release host, opt-in after download | proven by PocketPal (MIT); native module, so it ships with an APK build |
 
 Alternatives rejected: SQLite + `sqlite-vec` (vector only; graph becomes manual
 joins), Postgres + pgvector + Apache AGE (no local server running and three
@@ -182,3 +183,38 @@ default role move local.
 
 Phases 1–2 change the workstation (build + service env). Phase 3+ adds a new
 local tool. Nothing here touches production, spend, or customers.
+
+## Phase 6 — on-device AI in the Android app (PocketPal as reference)
+
+Reference checkout: `~/Projects/lab/pocketpal-ai` (MIT, Asghar Ghorbani).
+It is React Native and proves the shape: `llama.rn 0.13.0-rc.9` for GGUF chat,
+`whisper.rn 0.7.4` for voice, a model store with download/resume/verify, and
+tool calls running against the local model. Nothing is copied blindly — the
+license allows reading it, and its layout is what we imitate.
+
+Our app is `apps/mobile` (Expo 58 / RN 0.88, `android/` present,
+`expo-build-properties`). Adding `llama.rn` is a **native module**, so it needs
+a dev-client/APK rebuild, not an OTA update.
+
+1. **Read before writing.** PocketPal's model manager (download with resume +
+   size/hash check), context/KV policy, chat-template handling, and how it
+   degrades on low-RAM devices.
+2. **Add `llama.rn` to `apps/mobile`.** Keep it optional at runtime: the app
+   starts on the server path; the local engine loads only after a model is
+   downloaded and the user opts in.
+3. **Model store, our host.** Same UX as PocketPal (list, resume, verify,
+   delete) but pointed at `zollybot.shifaul.dev/releases`. First model:
+   LFM3-1.7B Q4 (text-only). LFM3-VL-2B + mmproj only where RAM allows.
+4. **Features, in order:** offline chat fallback when the API is unreachable →
+   local summarise/rewrite → voice notes via `whisper.rn`.
+5. **Budget:** ~15–30 MB per ABI for the native runtime; 0.6–1.2 GB per model
+   on device. Ship `arm64-v8a` first.
+
+**Acceptance:** airplane-mode chat works with a downloaded model; download
+resumes after a kill; a missing/corrupt model falls back to the server with a
+message; no chat content leaves the device except through features the user
+turned on.
+
+**Risks:** thermal throttling on long generations; `llama.rn` RC tracking RN
+0.88's new architecture; APK size growth; a phone that cannot hold the model
+must never crash — detect RAM and refuse early.

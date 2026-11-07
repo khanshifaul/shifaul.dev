@@ -10,7 +10,7 @@
 - Latest commits: `78accf8` (events carry the enriched roster), `29496dc` (service stays up after window close).
 
 ## In flight / blocked
-- **gate: human** — `analytics-truth.md` is waiting on the founder.
+- None: `analytics-truth` landed as `d5b6631` (PR #4); all four queue items are `done`.
 - ZollyBot conversation routes (`GET /v1/conversation`, `POST /v1/agents/<id>/message`) not built: blocks TUI chat.
 - Unreproduced `ConversationReadStore.adoptMemberState` exception; no matching log line.
 

@@ -4,4 +4,4 @@
 2. **TUI chat view** — owner: worker; gate: auto. Needs 1.
 3. **Settings → Background server panel** — owner: worker; gate: auto.
 4. **Collapse agent projections** (`AgentSummary`/`ClientAgentSummary`/`AgentProfile`) — owner: worker; gate: auto.
-5. **Founder gate**: `analytics-truth.md` — owner: founder; gate: human.
+5. No founder gate open; the shifaul-dev queue is empty.

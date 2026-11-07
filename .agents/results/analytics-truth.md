@@ -3,6 +3,7 @@ id: analytics-truth
 title: Ticket analytics report measured values, not zero placeholders
 status: done
 gate: human
+approved: yes
 ---
 
 ## Summary

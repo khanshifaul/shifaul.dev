@@ -752,7 +752,8 @@ export class SupportTicketsService {
                 ticketsByPriority,
                 ticketsThisMonth,
                 ticketsLastMonth,
-                resolvedTickets
+                resolvedTickets,
+                firstStaffReplies
             ] = await Promise.all([
                 this.prisma.supportTicket.count({ where: baseWhere }),
                 this.prisma.supportTicket.groupBy({
@@ -780,22 +781,55 @@ export class SupportTicketsService {
                         status: TicketStatus.RESOLVED,
                         closedAt: { not: null }
                     },
-                    select: { createdAt: true, closedAt: true }
-                })
+                    select: { createdAt: true, closedAt: true, priority: true }
+                }),
+                // A non-internal reply from staff is a first response.
+                this.prisma.ticketReply.findMany({
+                    where: {
+                        isInternal: false,
+                        author: { is: { roles: { hasSome: PermissionUtils.STAFF_ROLES } } },
+                        ticket: baseWhere,
+                    },
+                    select: {
+                        ticketId: true,
+                        createdAt: true,
+                        ticket: { select: { createdAt: true } },
+                    },
+                    orderBy: { createdAt: 'asc' },
+                }),
             ]);
 
-            // Calculate average resolution time in hours
-            const totalResolutionTime = resolvedTickets.reduce((sum, ticket) => {
-                if (ticket.closedAt) {
-                    const resolutionTime = ticket.closedAt.getTime() - ticket.createdAt.getTime();
-                    return sum + resolutionTime;
-                }
-                return sum;
-            }, 0);
+            // Calculate average resolution time in hours, overall and per
+            // priority, from the closedAt - createdAt proxy.
+            let totalResolutionTime = 0;
+            const resolutionByPriority = new Map<string, { total: number; count: number }>();
+            for (const ticket of resolvedTickets) {
+                if (!ticket.closedAt) continue;
+                const resolutionTime = ticket.closedAt.getTime() - ticket.createdAt.getTime();
+                totalResolutionTime += resolutionTime;
+                const bucket = resolutionByPriority.get(ticket.priority) ?? { total: 0, count: 0 };
+                bucket.total += resolutionTime;
+                bucket.count += 1;
+                resolutionByPriority.set(ticket.priority, bucket);
+            }
 
             const avgResolutionTime = resolvedTickets.length > 0 
                 ? (totalResolutionTime / resolvedTickets.length) / (1000 * 60 * 60) // Convert to hours
-                : 0;
+                : null;
+
+            // First response: the earliest non-internal staff reply on each
+            // ticket, measured from the ticket's creation, in minutes.
+            const repliedTicketIds = new Set<string>();
+            const firstResponseTimes: number[] = [];
+            for (const reply of firstStaffReplies) {
+                if (repliedTicketIds.has(reply.ticketId)) continue;
+                repliedTicketIds.add(reply.ticketId);
+                firstResponseTimes.push(reply.createdAt.getTime() - reply.ticket.createdAt.getTime());
+            }
+
+            const avgFirstResponseTime = firstResponseTimes.length > 0
+                ? firstResponseTimes.reduce((sum, time) => sum + time, 0) / firstResponseTimes.length / (1000 * 60) // Convert to minutes
+                : null;
 
             // Calculate growth rate
             const growthRate = ticketsLastMonth > 0 
@@ -814,9 +848,14 @@ export class SupportTicketsService {
                     inProgressTickets: ticketsByStatus.find(s => s.status === TicketStatus.IN_PROGRESS)?._count.id || 0,
                     resolvedTickets: ticketsByStatus.find(s => s.status === TicketStatus.RESOLVED)?._count.id || 0,
                     closedTickets: ticketsByStatus.find(s => s.status === TicketStatus.CLOSED)?._count.id || 0,
-                    averageResolutionTime: Math.round(avgResolutionTime * 100) / 100, // Round to 2 decimal places
-                    customerSatisfaction: 0, // TODO: Implement customer satisfaction tracking
-                    firstResponseTime: 0, // TODO: Implement first response time tracking
+                    averageResolutionTime: avgResolutionTime === null
+                        ? null
+                        : Math.round(avgResolutionTime * 100) / 100, // Round to 2 decimal places
+                    // SupportTicket has no rating column: null is "not measured".
+                    customerSatisfaction: null,
+                    firstResponseTime: avgFirstResponseTime === null
+                        ? null
+                        : Math.round(avgFirstResponseTime * 100) / 100, // Round to 2 decimal places
                 },
                 trends: {
                     ticketsThisMonth,
@@ -824,11 +863,17 @@ export class SupportTicketsService {
                     growthRate: Math.round(growthRate * 100) / 100, // Round to 2 decimal places
                     resolutionRate: Math.round(resolutionRate * 100) / 100, // Round to 2 decimal places
                 },
-                byPriority: ticketsByPriority.map(p => ({
-                    priority: p.priority,
-                    count: p._count.id || 0,
-                    averageResolutionTime: 0, // TODO: Calculate per priority
-                })),
+                byPriority: ticketsByPriority.map(p => {
+                    const bucket = resolutionByPriority.get(p.priority);
+
+                    return {
+                        priority: p.priority,
+                        count: p._count.id || 0,
+                        averageResolutionTime: bucket
+                            ? Math.round((bucket.total / bucket.count / (1000 * 60 * 60)) * 100) / 100
+                            : null,
+                    };
+                }),
                 byAssignee: [], // TODO: Implement assignee analytics
             };
         } catch (error) {

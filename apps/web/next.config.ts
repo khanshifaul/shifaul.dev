@@ -23,21 +23,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async headers() {
-    return [
-      {
-        // W3C TDM Reservation Protocol: reserve text/data-mining rights.
-        // https://www.w3.org/community/tdmrep/
-        source: '/:path*',
-        headers: [
-          {
-            key: 'TDM-Reservation',
-            value: '1',
-          },
-        ],
-      },
-    ];
-  },
   async redirects() {
     return [
       {

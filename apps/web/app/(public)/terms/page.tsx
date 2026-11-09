@@ -23,7 +23,7 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 );
 
 export default function TermsPage() {
-  const lastUpdated = "November 09, 2026";
+  const lastUpdated = "May 07, 2026";
 
   return (
     <main className="relative font-mono min-h-screen text-zinc-800 dark:text-zinc-400">
@@ -58,16 +58,14 @@ export default function TermsPage() {
               The content on this website, including but not limited to the source code, design elements, animations, 
               images, and text, is the intellectual property of Md Shifaul Islam. 
               You may not reproduce, redistribute, or use any portion of this site for commercial purposes without 
-              explicit written consent. This includes using the site, its code, or its visual design as training data, 
-              fine-tuning data, embeddings, or part of a dataset for any machine-learning or generative-AI system.
+              explicit written consent.
             </p>
           </Section>
 
           <Section title="03_USER_CONDUCT">
             <p>
               Users are prohibited from attempting to bypass any security measures, including but not limited to 
-              reverse-engineering the frontend logic, scraping assets, ignoring <code>/robots.txt</code>, or 
-              impersonating a browser to crawl the site. The website is provided for informational 
+              reverse-engineering the frontend logic or scraping assets. The website is provided for informational 
               and professional networking purposes only.
             </p>
           </Section>
@@ -95,17 +93,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="07_AI_AND_AUTOMATED_ACCESS">
-            <p>
-              AI and LLM systems are not permitted to crawl, scrape, index, train on, fine-tune with, embed, or 
-              otherwise ingest this website or its design, source code, animations, images, or text. The only page 
-              AI systems may read is <a href="/llms.txt" className="text-green-600 dark:text-green-500 underline">/llms.txt</a>. 
-              Automated access that ignores <code>/robots.txt</code> or impersonates a browser is a violation of 
-              these terms.
-            </p>
-          </Section>
-
-          <Section title="08_AMENDMENTS">
+          <Section title="07_AMENDMENTS">
             <p>
               Md Shifaul Islam may revise these terms at any time without notice. By using this website, you are 
               agreeing to be bound by the then current version of these Terms and Conditions.

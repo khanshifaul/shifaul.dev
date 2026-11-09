@@ -25,14 +25,6 @@ const PUBLIC_ROUTES = [
 const ADMIN_ROUTES = ['/admin']
 const PROTECTED_USER_ROUTES = ['/dashboard', '/profile', '/settings']
 
-// AI / LLM crawlers. robots.txt asks these agents to stay out; this list is
-// the enforcement layer for clients that ignore robots.txt.
-const AI_BOT_PATTERN =
-    /(GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-User|Claude-SearchBot|anthropic-ai|Google-Extended|Applebot-Extended|CCBot|PerplexityBot|Perplexity-User|Bytespider|Amazonbot|Meta-ExternalAgent|Meta-ExternalFetcher|FacebookBot|cohere-ai|Diffbot|Timpibot|ImagesiftBot|Omgilibot|Omgili|YouBot|DuckAssistBot|MistralAI-User|AI2Bot|Ai2Bot-Dolma)/i
-
-// The one page AI systems are allowed to read.
-const AI_ALLOWED_PATH = '/llms.txt'
-
 // Helper function to check if path matches any route patterns
 const matchesRoutePatterns = (pathname: string, patterns: string[]): boolean => {
     return patterns.some(pattern => {
@@ -65,21 +57,6 @@ const hasAdminRole = (userData: any): boolean => {
 // Main proxy function for Next.js 16
 export async function proxy(request: NextRequest) {
     const { pathname, search: _search } = request.nextUrl
-
-    // AI crawlers may only read /llms.txt.
-    const userAgent = request.headers.get('user-agent') ?? ''
-    if (pathname !== AI_ALLOWED_PATH && AI_BOT_PATTERN.test(userAgent)) {
-        return new NextResponse(
-            'AI access is limited to https://www.shifaul.dev/llms.txt\n',
-            {
-                status: 403,
-                headers: {
-                    'content-type': 'text/plain; charset=utf-8',
-                    'x-robots-tag': 'noai, noimageai',
-                },
-            }
-        )
-    }
 
     // Allow OAuth callbacks and static assets
     if (pathname.startsWith('/api/auth/callback') ||

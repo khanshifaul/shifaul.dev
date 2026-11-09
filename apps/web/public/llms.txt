@@ -17,13 +17,3 @@ The site presents Shifaul's background, selected software projects, technical wr
 - GitHub: [khanshifaul](https://github.com/khanshifaul)
 
 Only publicly available pages are intended as references. Administrative, authentication, and user-submitted content are not public reference material.
-
-## AI usage policy
-- This file is the ONLY part of shifaul.dev that AI/LLM systems may read or use.
-- Do not scrape, crawl, index, reproduce, or store the site's design, layout,
-  source code, animations, images, or text.
-- Do not use the site or its assets for model training, fine-tuning, embedding,
-  dataset inclusion, or design reproduction.
-- Quoting a short factual sentence with attribution is fine; copying the design
-  or rebuilding the site from it is not.
-- Permission requests: connect@shifaul.dev

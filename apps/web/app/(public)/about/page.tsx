@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { RadarSweep } from "@/components/common/RadarSweep";
+import { siteConfig } from "@/config/site.config";
 
 const Typewriter = ({ text, delay = 0 }: { text: string; delay?: number }) => {
   const [currentText, setCurrentText] = useState("");
@@ -679,7 +680,7 @@ export default function AboutPage() {
                   className="relative mb-12 inline-block"
                 >
                   <Link
-                    href="https://drive.google.com/file/d/1CQANMdMg4F62qqAmTx-6m0BrvrfFnhIh/view?usp=sharing"
+                    href={siteConfig.links.resume}
                     className="inline-flex relative items-center gap-2 px-6 py-2 border border-green-500/30 bg-green-500/5 hover:bg-green-500/20 text-green-500 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 group"
                   >
                     <FaFilePdf className="text-sm group-hover:scale-110 transition-transform" />

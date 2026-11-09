@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
+import { siteConfig } from "./config/site.config";
+
 const repoRoot = path.join(__dirname, "../..");
 
 const nextConfig: NextConfig = {
@@ -39,10 +41,10 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
-        // The resume now lives as a PDF on Google Drive.
+        // The resume now lives as a PDF on Google Drive. Its URL is defined
+        // once in siteConfig.links.resume (config/site.config.ts).
         source: '/resume',
-        destination:
-          'https://drive.google.com/file/d/1CQANMdMg4F62qqAmTx-6m0BrvrfFnhIh/view?usp=sharing',
+        destination: siteConfig.links.resume,
         permanent: true,
       },
     ];

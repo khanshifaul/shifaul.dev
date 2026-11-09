@@ -84,6 +84,8 @@ export const siteConfig = {
   links: {
     about: "/about",
     contact: "/contact",
+    resume:
+      "https://drive.google.com/file/d/1CQANMdMg4F62qqAmTx-6m0BrvrfFnhIh/view?usp=sharing",
     github: "https://github.com/khanshifaul",
     twitter: "https://twitter.com/khanshifaul",
     discord: "https://discord.gg/khanshifaul",

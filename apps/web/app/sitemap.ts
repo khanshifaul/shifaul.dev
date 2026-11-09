@@ -15,7 +15,6 @@ const staticPages: Array<{
   { path: "/blog", priority: 0.8, changeFrequency: "weekly" },
   { path: "/contact", priority: 0.7, changeFrequency: "yearly" },
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
-  { path: "/resume", priority: 0.6, changeFrequency: "yearly" },
 ];
 
 export const revalidate = 3600;

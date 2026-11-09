@@ -38,6 +38,13 @@ const nextConfig: NextConfig = {
         destination: '/admin',
         permanent: true,
       },
+      {
+        // The resume now lives as a PDF on Google Drive.
+        source: '/resume',
+        destination:
+          'https://drive.google.com/file/d/1CQANMdMg4F62qqAmTx-6m0BrvrfFnhIh/view?usp=sharing',
+        permanent: true,
+      },
     ];
   },
 };
